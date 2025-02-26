@@ -1,0 +1,73 @@
+{% extends "admin_layout.html" %}
+
+{% block content %}
+<div class="admin_main_div">
+    <h1 class="h1_main">ようこそ購買予約アプリ For 管理者へ</h1>
+</div>
+<div class="row">
+  <div class="col">
+    <div class="card cd_l" style="border-radius: 20px;">
+      <div class="card-body">
+        <h5 class="card-title">予約者リスト</h5>
+        <p class="card-text">今までの予約者を確認することが出来ます。</p>
+        <md-filled-button href="/admin/reserve_list">
+          <span>確認</span>
+          <span slot="icon" class="material-icons head_icon" viewBox="0 0 48 48">arrow_forward</span>
+        </md-filled-button>
+        
+      </div>
+    </div>
+  </div>
+  <div class="col">
+    <div class="card cd_r" style="border-radius: 20px;">
+      <div class="card-body">
+        <h5 class="card-title">メニュー編集</h5>
+        <p class="card-text">メニューの内容の編集、追加、削除ができます。</p>
+        <md-filled-button href="/admin/menu/edit">
+          <span>編集する</span>
+          <span slot="icon" class="material-icons head_icon" viewBox="0 0 48 48">edit</span>
+        </md-filled-button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="row">
+  <div class="col">
+    <div class="card cd_l" style="border-radius: 20px;  margin-top: 20px;">
+      <div class="card-body">
+        <h5 class="card-title">在庫管理</h5>
+        <p class="card-text">在庫数を管理、初期化することができます。</p>
+        <md-filled-button href="/admin/menu/stock">
+          <span>確認</span>
+          <span slot="icon" class="material-icons head_icon" viewBox="0 0 48 48">arrow_forward</span>
+        </md-filled-button>
+        
+      </div>
+    </div>
+  </div>
+  <div class="col">
+    <div class="card cd_r" style="border-radius: 20px; margin-top: 20px;">
+      <div class="card-body">
+        <h5 class="card-title">販売設定</h5>
+        <p class="card-text">予約のできる・できないの設定などができます</p>
+        <md-filled-button href="/admin/option">
+          <span>確認</span>
+          <span slot="icon" class="material-icons head_icon" viewBox="0 0 48 48">arrow_forward</span>
+        </md-filled-button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+.admin_main_div_c{
+  width: 100%;
+  height: 200px;
+  border-radius: 20px;
+  border: 1px solid var(--md-sys-color-outline);
+  display: flex;
+  padding: 10px;
+}
+</style>
+{% endblock %}

@@ -1,0 +1,17 @@
+{% extends "admin_layout.html" %}
+
+{% block content %}
+
+<h2>ID: {{ reserve.id }} の予約</h2>
+<div style="font-size: large;">
+    予約者: {{ reserve_user.grade }}年{{ reserve_user.cls }}組{{ reserve_user.num }}番 {{ reserve_user.lastname }}{{ reserve_user.firstname }}さん<br>
+    予約した商品: {{ reserve.menu_item_0.productname }}, {{ reserve.menu_item_1.productname }}, {{ reserve.menu_item_2.productname }}, {{ reserve.menu_item_3.productname }}, {{ reserve.menu_item_4.productname }}<br>
+    合計金額: {{ reserve.price }}円<br>
+    予約日: {{ reserve.reserve_day }} {{ reserve.reserve_time }}
+
+
+</div>
+
+
+
+{% endblock %}

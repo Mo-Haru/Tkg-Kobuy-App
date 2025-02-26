@@ -1,0 +1,36 @@
+{% extends "layout.html" %}
+{% block header %}
+
+        <span class="r_h_title">
+            / 予約完了
+        </span>
+{% endblock %}
+{% block content %}
+<h1>予約が完了しました</h1>
+<div class="r_d_top">
+<p>合計金額: {{ r_data.price }}</p>
+<p>予約した商品: {{ r_data.menu_item_0.productname }} {{ r_data.menu_item_1.productname }} {{ r_data.menu_item_2.productname }} {{ r_data.menu_item_3.productname }} {{ r_data.menu_item_4.productname }}</p>
+<p>予約状態: {{ r_data.state }}</p>
+</div>
+<div style="text-align: center; margin-top: 20px;">
+    <md-filled-button class="btn-back" href="/" style="box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19);">ホームへ戻る</md-filled-button>
+</div>
+<h3 style="text-align: center; margin-top: 20px;">時間があればアンケートにご協力ください↓</h3>
+<div style="width: auto; margin: 0 auto; text-align: center; border-radius: 20px;">
+    <iframe src="https://docs.google.com/forms/d/e/1FAIpQLScKNIqVlzvJ4gDzwUKSLB1nYnwVjUgjIqX5qvPmMGk9bKeSLg/viewform?embedded=true" width="640" height="1733" frameborder="0" marginheight="0" marginwidth="0">読み込んでいます…</iframe>
+
+</div>
+<style>
+.r_d_top{
+    width: 50%;
+    margin: 0 auto;
+    padding: 10px;
+    border-radius: 20px;
+    background-color: var(--md-sys-color-surface-container-highest);
+    box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19);
+}
+
+
+</style>
+
+{% endblock %}

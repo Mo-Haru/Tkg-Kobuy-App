@@ -1,0 +1,101 @@
+{% extends "admin_layout.html" %}
+{% block content %}
+
+<div class="" style="padding: 5px;">
+  <h2>Menu編集</h2>
+  <P>
+    ここでは、メニューの追加、編集、削除ができます。
+  </P>
+  <p>
+    <span class="material-icons">open_in_full</span>：メニューの詳細を確認できます。
+  </p>
+  <p>
+    <span class="material-icons">edit</span>：メニューの編集ができます。
+  </p>
+  <p>
+    <span class="material-icons">delete</span>：メニューの削除をできます。
+  </p>
+  <table class="table">
+    <thead>
+      <tr style="background-color: var(--md-sys-color-secondary-container); font-size: medium;">
+        <th style="border-radius: 20px 0 0 0;">順番</th>
+        <th>Id</th>
+        <th>商品名</th>
+        <th>価格</th>
+        <th>商品画像パス</th>
+        <th>商品説明</th>
+        <th>カテゴリー</th>
+        <th>在庫数</th>
+        <th>販売数</th>
+        <th>順序</th>
+        <th style="border-radius: 0 20px 0 0;">編集オプション</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for menu in menu %}
+      {% for stock in stock %}
+      {% if menu.id == stock.id %}
+    
+      <tr>
+        <td>{{ menu.orders }}</td>
+        <td>{{ menu.id }}</td>
+        <td style="width: 100px;">{{ menu.productname }}</td>
+        <td>{{ menu.price }}</td>
+        <td><a href="/admin/menu/img/{{ menu.id }}">{{ menu.product_image }}</a></td>
+        <td>{{ menu.explanation }}</td>
+        <td>
+          {% for category in menu_categorys %}
+          {% if menu.category_id == category.id %}
+          {{ category.category }}
+          {% endif %}
+          {% endfor %}
+        </td>
+        <td>
+          {{ stock.today_stock }} / {{ stock.today_stock_limit }}
+        </td>
+        <td>{{ menu.buy_cnt }}</td>
+        <td>
+          <md-filled-tonal-icon-button href="/admin/menu/up/{{ menu.id }}">
+            <span class="material-icons">arrow_upward</span>
+          </md-filled-tonal-icon-button>
+          <md-filled-tonal-icon-button href="/admin/menu/down/{{ menu.id }}">
+            <span class="material-icons">arrow_downward</span>
+          </md-filled-tonal-icon-button>
+          <td>
+          <md-filled-tonal-icon-button href="/admin/menu/{{ menu.id }}">
+            <span class="material-icons">open_in_full</span>
+          </md-filled-tonal-icon-button>
+          <md-filled-tonal-icon-button href="/admin/menu/edit/{{ menu.id }}">
+            <span class="material-icons">edit</span>
+          </md-filled-tonal-icon-button>
+          <md-filled-tonal-icon-button href="/admin/menu/delete/{{ menu.id }}">
+            <span class="material-icons">delete</span>
+          </md-filled-tonal-icon-button>
+        </td>
+      </tr>
+      {% endif %}
+      {% endfor %}
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+<div class="fab_button"><a href="/admin/menu/new"tabindex="-1">
+  <md-fab label="New Menu" class="r-b" href="/admin/menu/new">
+    <span class="material-icons mdicon-middle" slot="icon">add</span>
+  </md-fab>
+</a></div>
+
+
+
+
+<style>
+md-outlined-text-field{
+ height: 50px;
+ width: 100px;
+}
+
+
+
+
+</style>
+{% endblock %}

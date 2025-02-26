@@ -1,0 +1,85 @@
+{% extends "admin_layout.html" %}
+
+{% block content %}
+
+<div class="container mt-4">
+    <h2>Menu編集</h2>
+    <form method="POST" enctype="multipart/form-data">
+        {{ form.csrf_token }}
+        <div class="form-floating mb-3">
+            {{ form.product_name(class="form-control", value=menu_dic.productname) }}
+            <label for="floatingInput">{{ form.product_name.label }}</label>
+        </div>
+        {% for error in form.product_name.errors %}
+        <span style="color: red;">[{{ error }}]</span>
+        {% endfor %}
+        <br>
+        <div class="form-floating mb-3">
+            {{ form.product_price(class="form-control", value=menu_dic.price) }}
+            <label for="floatingInput">{{ form.product_price.label }}</label>
+        </div>
+        {% for error in form.product_price.errors %}
+        <span style="color: red;">[{{ error }}]</span>
+        {% endfor %}
+        <br>
+        <div class="form-floating mb-3">
+            {{ form.explanation(class="form-control", value=menu_dic.explanation) }}
+            <label for="floatingInput">{{ form.explanation.label }}</label>
+        </div>
+        {% for error in form.explanation.errors %}
+        <span style="color: red;">[{{ error }}]</span>
+        {% endfor %}
+        <br>
+        
+        <div class="form-floating mb-3">
+            {{ form.buy_cnt(class="form-control", value=menu_dic.buy_cnt) }}
+            <label for="floatingInput">{{ form.buy_cnt.label }}</label>
+        </div>
+        {% for error in form.buy_cnt.errors %}
+        <span style="color: red;">[{{ error }}]</span>
+        {% endfor %}
+        <br>
+
+        <div class="form-floating md-3">
+            {{ form.category(type="hidden", class="form-control", id="hidden_category", value=menu_dic.category) }}
+            <!-- <input type="hidden" class="form-control" id="hidden_category" value="{{ menu_dic.category }}"> -->
+            <select class="form-select" name="category" id="category">
+                <option value="{{ menu_dic.category_id }}" selected>
+                    {% for category in categorys %}
+                    {% if category.id == menu_dic.category_id %}
+                    {{ category.category }}
+                    {% endif %}
+                    {% endfor %}
+                </option>
+                {% for category in categorys %}
+                {% if category.id != menu_dic.category_id %}
+                    <option value="{{ category.id }}">{{ category.category }}</option>
+                {% endif %}
+                {% endfor %}
+            </select>
+            <label for="category">{{ form.category.label }}</label>
+        </div>
+        <br>
+        
+        <script>
+            document.addEventListener("DOMContentLoaded", () => {
+                const hiddenCategoryInput = document.getElementById('hidden_category');
+                const categorySelect = document.getElementById('category');
+        
+                categorySelect.addEventListener('change', () => {
+                    hiddenCategoryInput.value = categorySelect.value;
+                });
+            });
+        </script>
+
+        {{ form.product_image(class="form-control",value=menu_dic.product_image) }}
+        {% for error in form.product_image.errors %}
+        <span style="color: red;">[{{ error }}]</span>
+        {% endfor %}
+        <br>
+        {{ form.submit }}
+
+    </form>
+</div>
+
+{% endblock %}

@@ -1,0 +1,74 @@
+{% extends "layout.html" %}
+
+{% block content %}
+<div class="center">
+    <h1>Register</h1>
+    <form method="POST">
+        {{ form.csrf_token }}
+        <div class="line">
+            <div class="login-box">
+            <div class="login-text">お名前</div>
+            </div>
+            {{ form.lastname.label }} {{ form.lastname() }}
+            {% for error in form.lastname.errors %}
+            <span class="alert alert-danger" role="alert">[{{ error }}]</span>
+            {% endfor %}
+            {{ form.firstname.label }} {{ form.firstname() }}
+            {% for error in form.firstname.errors %}
+            <span class="alert alert-danger" role="alert">[{{ error }}]</span>
+            {% endfor %}
+        </div>
+        <div class="line">
+            <div class="login-box">
+                <div class="login-text">学年/組/番号</div>
+                </div>
+            {{ form.grade.label }} {{ form.grade() }}
+            {% for error in form.grade.errors %}
+            <span class="alert alert-danger" role="alert">[{{ error }}]</span>
+            {% endfor %}
+            {{ form.cls.label }} {{ form.cls() }}
+            {% for error in form.cls.errors %}
+            <span class="alert alert-danger" role="alert">[{{ error }}]</span>
+            {% endfor %}
+            {{ form.num.label }} {{ form.num() }}
+            {% for error in form.num.errors %}
+            <span class="alert alert-danger" role="alert">[{{ error }}]</span>
+            {% endfor %}
+        </div>  
+        <div class="line">
+            <div class="login-box">
+                <div class="login-text">メールアドレス</div>
+                </div>
+            {{ form.email.label }} {{ form.email() }}
+            {% for error in form.email.errors %}
+            <span class="alert alert-danger" role="alert">[{{ error }}]</span>
+            {% endfor %}
+        </div>  
+        <div class="line">
+            <div class="login-box">
+                <div class="login-text">パスワード</div>
+                </div>
+            {{ form.password.label }} {{ form.password() }}
+            {% for error in form.password.errors %}
+            <span class="alert alert-danger" role="alert">[{{ error }}]</span>
+            {% endfor %}
+            {{ form.confirm.label }} {{ form.confirm() }}
+            {% for error in form.confirm.errors %}
+            <span class="alert alert-danger" role="alert">[{{ error }}]</span>
+            {% endfor %}
+        </div>
+        <div class="line">
+            <div class="login-box">
+                <div class="login-text">確認コード</div>
+                </div>
+            {{ form.confirm_code.label }} {{ form.confirm_code() }}
+            {% for error in form.confirm_code.errors %}
+            <span class="alert alert-danger" role="alert">[{{ error }}]</span>
+            {% endfor %}
+        </div>  
+        <div style="text-align: center;">
+        {{ form.submit() }}
+        </div>
+    </form>
+</div>
+{% endblock %}

@@ -1,0 +1,52 @@
+{% extends "layout.html" %}
+
+{% block content %}
+<div class="m_d_card" style="display: flex; align-items: flex-start; gap: 20px; padding: 20px; ">
+    <div class="m_d_img" style="flex-shrink: 0; width: 50%;">
+        {% if menu_item.product_image %}
+        <img src="{{ url_for('static', filename=menu_item.product_image) }}" alt="{{ menu_item.productname }}の画像" width="100%" height="100%" style="border-radius: 20px;">
+        {% else %}
+        {{ menu_item.productname }}の商品画像が存在しないか、読み込むことができませんでした。
+        {% endif %}
+    </div>
+
+
+    <div style="flex-grow: 1;">
+    <div class="m_d_title" style="font-size: 1.8em; font-weight: 600; margin-bottom: 10px;">
+        {{ menu_item.productname }} - {{ menu_item.price }}円
+        <md-text-button href="javascript:history.back();">
+            <span>前のページへ戻る</span>
+            <span slot="icon" class="material-icons  head_icon" viewBox="0 0 48 48">arrow_back</span>
+        </md-text-button>
+
+    </div>
+    <div class="m_d_text" style="font-size: 1.1em; color: #555;">{{ menu_item.explanation }}</div>
+    <md-divider style="margin-top: 24px; margin-bottom: 24px; width: 100%;"></md-divider>
+    <form action="" method="POST">
+        <md-filled-button>
+            <span>この商品を予約する</span>
+            <span slot="icon" class="material-icons  head_icon" viewBox="0 0 48 48">shopping_cart</span>
+        </md-filled-button>
+    </form>
+    <p style="margin-top: 10px;">ほかの商品や複数個予約したい場合は下のボタンをクリックしてください</p>
+    <md-filled-button class="reserve" type="button" id="reserve_button_detail">
+        <span>予約ページへ移動</span>
+        <span slot="icon" class="material-icons  head_icon" viewBox="0 0 48 48">arrow_forward</span>
+    </md-filled-button>
+
+</div>
+
+
+<!-- 元のページに戻るリンク -->
+
+
+
+<script>
+    document.getElementById("reserve_button_detail").addEventListener("click", () => {
+        const productId = "{{ menu_item.id }}"; // 商品のID
+        window.location.href = `/reserve?highlight=${productId}`; // クエリパラメータ付きでリダイレクト
+    });
+</script>
+
+
+{% endblock %}

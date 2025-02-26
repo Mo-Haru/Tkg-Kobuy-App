@@ -1,0 +1,38 @@
+{% extends "layout.html" %}
+
+{% block content %}
+<div style="height: 30px;"></div>
+<div class="center" style="border-radius: 20px; padding: 20px; border: 1px solid gray;">
+    <div class="title"><h1>お問い合わせフォーム</h1></div>
+    <div style="width: auto;">
+        <h6>ここでは購買に対する質問などのお問い合わせができます。</h2>
+        <h6>このアプリケーションに対する改善点などがあれば tkg221032278@fukui-ed.jp までおねがいします。</h2>
+
+    </div>
+    <div class="form">
+        <form action="" method="POST">
+            <md-outlined-text-field  name="title" label="タイトル" value="" style="width: 100%;">
+            </md-outlined-text-field>
+            <div style="height: 20px;"></div>
+            <md-outlined-text-field
+                name="content"
+                label="内容"
+                value=""
+                type="textarea"
+                label="Vertical resize"
+                rows="5"
+                style="width: 100%;">
+            </md-outlined-text-field>
+
+            <div style="height: 20px;"></div>
+            <md-filled-tonal-button 
+                type="submit" 
+                style=" display: flex; justify-content: center; align-items: center; ">
+                送信する
+                <svg slot="icon" viewBox="0 0 48 48"><path d="M6 40V8l38 16Zm3-4.65L36.2 24 9 12.5v8.4L21.1 24 9 27Zm0 0V12.5 27Z"/></svg>
+              </md-filled-tonal-button>
+        </form>
+
+</div>
+
+{% endblock %}

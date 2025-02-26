@@ -1,0 +1,79 @@
+{% extends "layout.html" %}
+
+{% block content %}
+<div style="padding: 5px; display: flex; justify-content: center; align-items: flex-start; min-height: 100vh;">
+    <!-- カードデザインのコンテナ -->
+    <md-elevated-card style="width: 100%; max-width: 600px; padding: 16px; display: block;">
+        <!-- タイトル -->
+        <h1 class="" style="margin-bottom: 24px;">ユーザー情報</h1>
+        <p class="md-body-large" style="color: var(--md-sys-color-primary); font-weight: bold; margin-bottom: 16px;">
+            {{ data.current_user_lastname }} {{ data.current_user_firstname }} さん
+        </p>
+
+        <!-- ユーザー情報リスト -->
+        <ul style="list-style: none; padding: 0; margin: 0;">
+            <li class="md-body-medium" style="margin-bottom: 8px;">
+                <strong>ユーザーID:</strong> {{ data.current_user_id }}
+            </li>
+            <li class="md-body-medium" style="margin-bottom: 8px;">
+                <strong>ユーザー名:</strong> {{ data.current_user_lastname }} {{ data.current_user_firstname }}
+            </li>
+            <li class="md-body-medium" style="margin-bottom: 8px;">
+                <strong>メールアドレス:</strong> {{ data.current_user_email }}
+            </li>
+            <li class="md-body-medium" style="margin-bottom: 8px;">
+                <strong>学年/クラス/番号:</strong> {{ data.current_user_grade }}/{{ data.current_user_cls }}/{{ data.current_user_num }}
+            </li>
+        </ul>
+
+        <!-- ボタンセクション -->
+        <div style="margin-top: 24px; display: flex; justify-content: space-between;">
+            <!-- 前のページに戻るボタン -->
+            <md-filled-button href="javascript:history.back();">
+                <span>戻る</span>
+                <span slot="icon" class="material-icons  head_icon" viewBox="0 0 48 48">arrow_back</span>
+            </md-filled-button>
+            <!-- ログアウトボタン -->
+            <md-filled-button href="/logout">
+                <span>ログアウト</span>
+                <span slot="icon" class="material-icons  head_icon" viewBox="0 0 48 48">logout</span>
+            </md-filled-button>
+        </div>
+    </md-elevated-card>
+</div>
+
+<style>
+    /* 見出しの虹色スタイル */
+    .rainbow {
+        font-size: 2rem;
+        font-weight: bold;
+        text-align: center;
+        background: linear-gradient(90deg, #FF5722, #FFC107, #4CAF50, #2196F3, #9C27B0);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+    }
+    
+    /* md-body-large と md-body-medium の補完 */
+    .md-body-large {
+        font-size: 1.25rem;
+    }
+
+    .md-body-medium {
+        font-size: 1rem;
+    }
+
+    /* カード影と丸み */
+    md-elevated-card {
+        border-radius: 12px;
+        box-shadow: var(--md-sys-elevation-level3);
+        background: var(--md-sys-color-surface);
+    }
+
+    /* ボタンのカスタマイズ */
+    md-filled-button {
+        --md-comp-filled-button-container-color: var(--md-sys-color-primary);
+        --md-comp-filled-button-label-text-color: var(--md-sys-color-on-primary);
+        --md-comp-filled-button-icon-color: var(--md-sys-color-on-primary);
+    }
+</style>
+{% endblock %}

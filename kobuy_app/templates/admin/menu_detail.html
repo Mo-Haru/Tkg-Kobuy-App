@@ -1,0 +1,45 @@
+{% extends "admin_layout.html" %}
+
+{% block content %}
+<div class="m_d_card">
+  <div class="m_d_title">
+    <md-filled-tonal-icon-button href="javascript:history.back()">
+      <span class="material-icons">arrow_back</span>
+    </md-filled-tonal-icon-button>
+    <span>
+      {{ menu.productname }}の詳細
+    </span>
+    <span style="position: absolute; right: 0; margin-right: 5px;">
+      <div class="m_d_iconbtn">
+        <md-filled-tonal-icon-button href="/admin/menu/edit">
+          <span class="material-icons">close_fullscreen</span>
+        </md-filled-tonal-icon-button>
+        <md-filled-tonal-icon-button href="/admin/menu/edit/{{ menu.id }}">
+          <span class="material-icons">edit</span>
+        </md-filled-tonal-icon-button>
+        <md-filled-tonal-icon-button href="/admin/menu/delete/{{ menu.id }}">
+          <span class="material-icons">delete</span>
+        </md-filled-tonal-icon-button>
+      </div>
+    </span>
+  </div>
+
+<div class="m_d_sub_title">
+  <div>
+    {% if menu.product_image %}
+    <img class="m_d_img" src="{{ url_for('static', filename=menu.product_image) }}" style="width: 300px;">
+    {% else %}
+    {{ menu.productname }}の商品画像が存在しないか、読み込むことができませんでした。
+    {% endif %}
+  </div>
+    <div>
+      id: {{ menu.id }}<br>
+      価格: {{ menu.price }}<br>
+      説明: {{ menu.explanation }}<br>
+      カテゴリー: {{ category.category }}<br>
+      在庫数: {{ stock.today_stock }} / {{ stock.today_stock_limit }}<br>
+    </div>
+  </div>
+</div>
+
+{% endblock %}

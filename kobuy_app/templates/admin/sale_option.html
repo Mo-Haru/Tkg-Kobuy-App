@@ -1,0 +1,62 @@
+{% extends "admin_layout.html" %}
+
+{% block content %}
+
+    <h2 style="margin-bottom: 16px;">販売設定</h2>
+    <md-divider></md-divider>
+
+
+
+
+    <div class="cardsa">
+        <div class="carda" style="width: 500px;">
+            <!-- 販売の開始終了セクション -->
+            <section>
+                <h3 style="margin-bottom: 16px;">販売の開始終了</h3>
+                <md-divider style="margin-bottom: 16px;;"></md-divider>
+                <div style="display: flex; gap: 16px;">
+                    <h4>現在の販売状態:<span {% if sale_state.state == 0 %} style="color: var(--md-sys-color-error);" {% endif %}>{{ sale_state.state_name }}</span></h4>
+                </div>
+                <p style="font-size: medium;">開始を押すと販売を開始します。終了を押すと販売を終了します。</p>
+                    
+                <div style="">
+                    <md-filled-button href="/admin/start_sale" aria-label="販売を開始する">
+                        <span class="head_profile">開始</span>
+                        <span slot="icon" class="material-icons head_icon" viewBox="0 0 48 48">play_arrow</span>
+                    </md-filled-button>
+                    <md-filled-button href="/admin/end_sale" aria-label="販売を終了する">
+                        <span class="head_profile">終了</span>
+                        <span slot="icon" class="material-icons head_icon" viewBox="0 0 48 48">stop_circle</span>
+                    </md-filled-button>
+                
+                </div>
+            </section>
+        </div>
+
+
+
+        <div class="carda" style="width: 500px;">
+            <!-- 在庫設定セクション -->
+            <section>
+                <h3 style="margin-bottom: 16px;">在庫設定</h3>
+                <md-divider style="margin-bottom: 16px;;"></md-divider>
+                <p style="font-size: medium;">
+                    在庫を初期化する：販売終了時に在庫数を初期化（０）にすることができます。
+                </p>
+                <p style="font-size: medium;">
+                    今日の在庫を設定する：今日のアプリでの販売数を設定することができます。
+                </p>
+                <div style="display: flex; gap: 16px;">
+                    <md-filled-button href="/admin/reset_stock" aria-label="在庫を初期化する">
+                        <span class="head_profile">在庫を初期化する</span>
+                        <span slot="icon" class="material-icons head_icon" viewBox="0 0 48 48">refresh</span>
+                    </md-filled-button>
+                    <md-filled-button href="/admin/menu/stock/first_setup" aria-label="今日の在庫を設定する">
+                        <span class="head_profile">今日の在庫を設定する</span>
+                        <span slot="icon" class="material-icons head_icon" viewBox="0 0 48 48">settings</span>
+                    </md-filled-button>
+                </div>
+            </section>
+        </div>
+    </div>
+{% endblock %}

@@ -1,0 +1,215 @@
+{% extends "layout.html" %}
+
+{% block content %}
+<div style="padding: 20px;">
+
+    <h1>購買予約アプリへようこそ{% if current_user.is_authenticated %}、{{ data.current_user_lastname }} {{ data.current_user_firstname }}さん!{% endif %}</h1>
+
+    <div class="i" style="display: flex; height: auto; width: 100%; margin-top: 20px;">
+
+        <!-- メニューランキング -->
+        <div class="i_m" style="flex: 1; padding: 20px; margin-right: 15px; background-color: var(--md-sys-color-background); border-radius: 20px;">
+            <div class="i_m_title">メニューランキング</div>
+            <div class="i_m_content" style="font-size: large;">
+                {% if f_items.f_item_1 != None and f_items.f_item_2 != None and f_items.f_item_3 != None %}
+                    <div class="i_m_cs">
+                        {% if f_items.f_item_1 != None %}
+                        <a href="/menu/{{ f_items.f_item_1.id }}" class="ranking_item">
+                            <img src="{{ url_for('static', filename=f_items.f_item_1.product_image) }}" alt="" class="ranking_img">
+                            <div class="ranking_text">
+                                <p>１位：{{ f_items.f_item_1.productname }}</p>
+                            </div>
+                        </a>
+                        {% else %}
+                        <p>情報を取得できませんでした</p>
+                        {% endif %}
+                        
+                    </div>
+
+                    <div class="i_m_cs">
+                        {% if f_items.f_item_2 != None %}
+                        <a href="/menu/{{ f_items.f_item_2.id }}" class="ranking_item">
+                            <img src="{{ url_for('static', filename=f_items.f_item_2.product_image) }}" alt="" class="ranking_img">
+                            <div class="ranking_text">
+                                <p>２位：{{ f_items.f_item_2.productname }}</p>
+                            </div>
+                        </a>
+                        {% else %}
+                        <p>情報を取得できませんでした</p>
+                        {% endif %}
+                        
+                    </div>
+
+                    <div class="i_m_cs">
+                        {% if f_items.f_item_3 != None %}
+                        <a href="/menu/{{ f_items.f_item_3.id }}" class="ranking_item">
+                            <img src="{{ url_for('static', filename=f_items.f_item_3.product_image) }}" alt="" class="ranking_img">
+                            <div class="ranking_text">
+                                <p>３位：{{ f_items.f_item_3.productname }}</p>
+                            </div>
+                        </a>
+                        {% else %}
+                        <p>情報を取得できませんでした</p>
+                        {% endif %}
+                    </div>
+                {% else %}
+                    <p>情報を取得できませんでした</p>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- 予約履歴 -->
+        <div class="sidebar" style="flex: 1; padding: 20px; background-color: var(--md-sys-color-background); border-radius: 20px;">
+            <div class="i_s_title">予約履歴</div>
+            <div class="i_s_content">
+                {% if current_user.is_anonymous %}
+                    <p>ログインすると予約履歴が表示されます</p>
+                {% endif %}
+
+                {% if current_user.is_authenticated %}
+                    {% if reserve_items == None %}
+                        <p>最近の予約は存在しません</p>
+                    {% else %}
+                        <div class="reservation_details">
+                            <p class="reservation_date"><strong>予約日:</strong> {{ reserve_items.reserve_day }}</p><br>
+                            <p class="reservation_price"><strong>合計金額:</strong> {{ reserve_items.price }}円</p><br>
+                            <p class="reservation_state"><strong>注文の状態:</strong> {{ reserve_items.state }}</p><br>
+                                
+
+                            <div class="reserved_items">
+                                <p><strong>予約した商品:</strong></p>
+                                <ul>
+                                    <!-- 予約された商品1 -->
+                                    {% if reserve_items.menu_item_0 != None %}
+                                    {% for menu in menus %}
+                                    {% if reserve_items.menu_item_0.id == menu.id %}
+                                        <li><img src="{{ url_for('static', filename=menu.product_image) }}" style="width: 50px; height: 50px; border-radius: 20px;">{{ menu.productname }}</li>
+                                    {% endif %}
+                                    {% endfor %}
+                                    {% else %}
+                                        <li>予約された商品はありません</li>
+                                    {% endif %}
+
+                                    {% if reserve_items.menu_item_1 != None %}
+                                    {% for menu in menus %}
+                                    {% if reserve_items.menu_item_1.id == menu.id %}
+                                        <li><img src="{{ url_for('static', filename=menu.product_image) }}" style="width: 50px; height: 50px; border-radius: 20px;">{{ menu.productname }}</li>
+                                    {% endif %}
+                                    {% endfor %}
+                                    {% endif %}
+
+                                    {% if reserve_items.menu_item_2 != None %}
+                                    {% for menu in menus %}
+                                    {% if reserve_items.menu_item_2.id == menu.id %}
+                                        <li><img src="{{ url_for('static', filename=menu.product_image) }}" style="width: 50px; height: 50px; border-radius: 20px;">{{ menu.productname }}</li>
+                                    {% endif %}
+                                    {% endfor %}
+                                    {% endif %}
+
+
+                                    {% if reserve_items.menu_item_3 != None %}
+                                    {% for menu in menus %}
+                                    {% if reserve_items.menu_item_3.id == menu.id %}
+                                        <li><img src="{{ url_for('static', filename=menu.product_image) }}" style="width: 50px; height: 50px; border-radius: 20px;">{{ menu.productname }}</li>
+                                    {% endif %}
+                                    {% endfor %}
+                                    {% endif %}
+
+                                    {% if reserve_items.menu_item_4 != None %}
+                                    {% for menu in menus %}
+                                    {% if reserve_items.menu_item_4.id == menu.id %}
+                                        <li><img src="{{ url_for('static', filename=menu.product_image) }}" style="width: 50px; height: 50px; border-radius: 20px;">{{ menu.productname }}</li>
+                                    {% endif %}
+                                    {% endfor %}
+                                    {% endif %}
+                                </ul>
+                            </div>
+                            <md-filled-button class="btn-detail" href="/my_reserved_list/detail/{{ reserve_items.id }}">詳細</md-filled-button>
+                            <md-filled-button class="btn-cancel" href="/cancel_reserve/{{ reserve_items.id }}">キャンセル</md-filled-button>
+                        </div>
+                    {% endif %}
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    {% if current_user.is_authenticated %}
+        <h3 style="text-align: center; margin-top: 30px;">アンケートにご協力ください</h3>
+        <iframe style="margin: 0 auto; display: block" src="https://docs.google.com/forms/d/e/1FAIpQLScKNIqVlzvJ4gDzwUKSLB1nYnwVjUgjIqX5qvPmMGk9bKeSLg/viewform?embedded=true" width="640" height="1733" frameborder="0" marginheight="0" marginwidth="0">読み込んでいます…</iframe>
+    {% endif %}
+</div>
+
+<style>
+    /* メニューランキングのスタイル */
+    .i_m_title {
+        height: 50px;
+        font-size: 30px;
+        text-align: center;
+        font-weight: bold;
+        border-bottom: 1px solid var(--md-sys-color-outline);
+    }
+
+    .i_m_cs {
+        display: flex;
+        align-items: center;
+        margin-top: 20px;
+        border-radius: 10px;
+        padding: 10px;
+    }
+
+    .ranking_item {
+        display: flex;
+        align-items: center;
+        width: 100%;
+        text-decoration: none;
+        color: inherit;
+    }
+
+    .ranking_img {
+        width: 100px;
+        height: 100px;
+        border-radius: 10px;
+        margin-right: 15px;
+    }
+
+    .ranking_text p {
+        font-size: 18px;
+        margin: 0;
+    }
+
+    /* 予約履歴のスタイル */
+    .reservation_details {
+        margin-top: 20px;
+    }
+
+    .reservation_date, .reservation_price {
+        font-size: 18px;
+        margin-bottom: 10px;
+    }
+
+    .reserved_items ul {
+        list-style-type: none;
+        padding-left: 0;
+    }
+
+    .reserved_items li {
+        font-size: 16px;
+        margin-bottom: 5px;
+    }
+
+    .sidebar {
+        padding: 20px;
+        background-color: var(--md-sys-color-background);
+        border-radius: 20px;
+    }
+
+    .i_s_title {
+        text-align: center;
+        font-size: 30px;
+        font-weight: bold;
+        border-bottom: 1px solid var(--md-sys-color-outline);
+        padding-bottom: 10px;
+    }
+</style>
+
+{% endblock %}

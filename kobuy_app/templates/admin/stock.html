@@ -1,0 +1,59 @@
+{% extends "admin_layout.html" %}
+
+
+{% block content %}
+
+
+<div class="" style="padding: 5px;">
+    <h2>在庫設定<md-filled-button href="/admin/menu/stock/first_setup">最初の在庫設定をする</md-filled-button></h2>
+    <p style="font-size: medium;">
+        ここでは、在庫を確定した後に細かい在庫の調節を行うことができます。
+    </p>
+    <table class="table">
+        <thead>
+            <tr style="background-color: var(--md-sys-color-secondary-container); font-size: medium;">
+                <th style="border-radius: 20px 0 0 0;">Id</th>
+                <th>商品名</th>
+                <th style="border-radius: 0 20px 0 0;">在庫数</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for menu in menus %}
+            {% for stock in stocks %}
+            {% if menu.id == stock.id %}
+                <tr style="height: 50px;">
+                    <td style="width: 20px;"><a href="/admin/menu/{{ menu.id }}">{{ menu.id }}</a></td>
+                    <td style="width: 200px;"><a href="/admin/menu/{{ menu.id }}">{{ menu.productname }}</a></td>
+                    <td>
+                        <span>
+                            <md-filled-tonal-icon-button href="/admin/menu/stock/dec/{{ menu.id }}">
+                                <span class="material-icons">remove</span>
+                            </md-filled-tonal-icon-button>
+                        </span>
+                        <span style="margin: 0 10px;">
+                            <a>{{ stock.today_stock }} / {{ stock.today_stock_limit }}</a>
+                        </span>
+                        <span>
+                            <md-filled-tonal-icon-button href="/admin/menu/stock/inc/{{ menu.id }}">
+                                <span class="material-icons">add</span>
+                            </md-filled-tonal-icon-button>
+                        </span>
+
+                    </td>
+                </tr>
+            {% endif %}
+            {% endfor %}
+            {% endfor %}
+        </tbody>
+    </table>
+ 
+    
+ </div>
+ 
+
+
+
+
+
+
+{% endblock %}

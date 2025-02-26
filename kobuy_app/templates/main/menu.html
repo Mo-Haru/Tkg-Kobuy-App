@@ -1,0 +1,50 @@
+{% extends "layout.html" %}
+{% block header %}
+
+        <span class="r_h_title">
+            / メニュー
+        </span>
+{% endblock %}
+{% block content %}
+
+<div class="r_cards">
+    {% for menu_item in menu_items %}
+    <div class="r_i_card" data-id="{{ menu_item.id }}" style="width: 300px;">
+        <div class="r_i_img">
+            {% if menu_item.product_image %}
+            <a href="/menu/{{ menu_item.id }}">
+            <img src="{{ url_for('static', filename=menu_item.product_image) }}" alt="{{ menu_item.productname }}の画像" width="100%" height="100%">
+            </a>
+            {% else %}
+            {{ menu_item.productname }}の商品画像が存在しないか、読み込むことができませんでした。
+            {% endif %}
+        </div>
+        <div class="r_i_text">
+            <span class="r_i_name bold">{{ menu_item.productname }}</span>
+            <span class="r_i_price" id="r_i_price_{{ menu_item.id }}">{{ menu_item.price }}円</span>
+        </div>
+        <div class="m_i_ex" style="width: 200px; padding: 5px;">
+          <div class="m_i_ext bold" style="text-align: center;">商品説明</div><br>
+          <p>{{ menu_item.explanation }}</p>
+        </div>
+        <div>
+            <md-filled-button href="/menu/{{ menu_item.id }}">
+                商品の詳細/予約              
+                <span slot="icon" class="material-icons head_icon" viewBox="0 0 48 48">info</span>
+            </md-filled-button>
+            <!-- <md-filled-button href="/reserve?highlight={{ menu_item.id }}">
+                <span>予約する</span>
+                <span slot="icon" class="material-icons head_icon" viewBox="0 0 48 48">shopping_cart</span>
+            </md-filled-button> -->
+        </div>
+    </div>
+    {% endfor %}
+</div>
+
+<style>
+.bold{
+    font-weight: bold;
+}
+</style>
+
+{% endblock %}

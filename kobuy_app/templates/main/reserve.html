@@ -1,0 +1,286 @@
+{% extends "layout.html" %}
+{% block header %}
+    <span class="r_h_title">
+        / 予約
+    </span>
+{% endblock %}
+
+{% block header_r %}
+{% endblock %}
+{% block content %}
+<div class="reserve_main">
+    <div class="reserve_L">
+        <div class="reserve_form">
+        <form class="r_form" id="reserveForm" method="POST" action="" onSubmit="return check()">
+            <label for="reserve_item_0"></label>
+            <label for="reserve_item_1"></label>
+            <label for="reserve_item_2"></label>
+            <label for="reserve_item_3"></label>
+            <label for="reserve_item_4"></label>
+
+            <input type="hidden" name="reserve_item_0" id="reserve_item_0" value="None">
+            <input type="hidden" name="reserve_item_1" id="reserve_item_1" value="None">
+            <input type="hidden" name="reserve_item_2" id="reserve_item_2" value="None">
+            <input type="hidden" name="reserve_item_3" id="reserve_item_3" value="None">
+            <input type="hidden" name="reserve_item_4" id="reserve_item_4" value="None">
+
+            <div class="r_cards">
+                {% for menu_item in menu_items %}
+                {% for menu_stock in menu_stock %}
+                {% if menu_item.id == menu_stock.id %}
+                <div class="r_i_card" data-id="{{ menu_item.id }}" data-category="{{ menu_item.category_id }}">
+                    <div class="r_i_img">
+                        {% if menu_item.product_image %}
+                        <a href="/menu/{{ menu_item.id }}">
+                        <img src="{{ url_for('static', filename=menu_item.product_image) }}" alt="{{ menu_item.productname }}の画像" width="100%" height="100%">
+                        </a>
+                        {% else %}
+                        {{ menu_item.productname }}の商品画像が存在しないか、読み込むことができませんでした。
+                        {% endif %}
+                    </div>
+                    <div class="r_i_text">
+                        <span class="r_i_name">{{ menu_item.productname }}</span>
+                        <span class="r_i_price" id="r_i_price_{{ menu_item.id }}">{{ menu_item.price }}円</span>
+                        <p>在庫：{{ menu_stock.today_stock }}</p>
+                        <md-text-button id="product_detail_{{ menu_item.id }}" type="button" data-id="{{ menu_item.id }}">商品の詳細</md-text-button>
+                    </div>
+                    <div class="r_i_counter">
+                        <md-filled-tonal-icon-button id="r_i_decrement_{{ menu_item.id }}" type="button">
+                            <span class="material-icons">remove</span>
+                        </md-filled-tonal-icon-button>
+                        <label id="r_i_cnt_{{ menu_item.id }}" for="r_i_cnt_{{ menu_item.id }}">0</label>
+                        <input type="hidden" name="r_i_cnt_{{ menu_item.id }}">
+                        <md-filled-tonal-icon-button id="r_i_increment_{{ menu_item.id }}" type="button">
+                            <span class="material-icons">add</span>
+                        </md-filled-tonal-icon-button>
+                    </div>
+                </div>
+                {% endif %}
+                {% endfor %}
+                {% endfor %}
+            </div>
+        </form>
+        </div>
+    </div>
+    <div class="reserve_R">
+        <div class="sale_state">
+            {% if sale_state.state == 1 %}
+            <h3>販売中です</h3>
+            {% else %}
+            <h3 class="sale_status sale_inactive">販売停止中です</h3>
+            {% endif %}
+        </div>
+        <!-- <md-divider></md-divider>
+        <div>
+            <h3>予約商品</h3>
+            <div>
+                <li id="reserve_item_0" class="hidden">None</li>
+                <li id="reserve_item_1" class="hidden">None</li>
+                <li id="reserve_item_2" class="hidden">None</li>
+                <li id="reserve_item_3" class="hidden">None</li>
+                <li id="reserve_item_4" class="hidden">None</li>
+            </div>
+        </div> -->
+        <md-divider></md-divider>
+        <div style="margin-bottom: 5px; align-items: flex-end;">
+            <h3>合計金額<a id="total_price">0</a><a>円</a></h3>
+            <md-filled-button type="button" id="reserve_button" style="width: 100%;">
+                <span>予約する</span>
+                <span slot="icon" class="material-icons head_icon" viewBox="0 0 48 48">check</span>
+            </md-filled-button>
+        </div>
+    </div>
+</div>
+<style>
+    .resreve_form {
+        scroll-behavior: smooth;
+        overflow: scroll;
+        display: flex;
+
+    }
+    .reserve_main {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        width: 100%;
+        height: calc(100vh - 60px); /* ヘッダーの高さを考慮 */
+    }
+    .reserve_L {
+        width: auto;
+        overflow-y: auto;
+        height: calc(100%); /* ヘッダーとフッターの高さを考慮 */
+    }
+    .reserve_R {
+        right: 0;
+        width: 700px;
+        height: calc(100%); /* ヘッダーとフッターの高さを考慮 */
+        background-color: var(--md-sys-color-surface);
+        padding: 10px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        display: flex;
+        flex-direction: column
+    }
+    .sale_state {
+        padding: 10px;
+        text-align: center;
+        width: 100%;
+    }
+    .sale_status {
+        padding: 5px 10px;
+        border-radius: 5px;
+    }
+    .sale_active {
+        color: #000000;
+    }
+    .sale_inactive {
+        color: var(--md-sys-color-error);
+    }
+</style>
+
+<!--強調表示-->
+<script>
+    document.addEventListener("DOMContentLoaded", () => {
+        // URLクエリパラメータを取得
+        const urlParams = new URLSearchParams(window.location.search);
+        const highlightId = urlParams.get('highlight');
+
+        if (highlightId) {
+            // 該当のカードを取得
+            const highlightCard = document.querySelector(`.r_i_card[data-id="${highlightId}"]`);
+            if (highlightCard) {
+                // 強調表示用のスタイルを適用
+                highlightCard.style.border = "3px solid #FF0000";
+                highlightCard.style.boxShadow = "0 0 15px rgba(255, 0, 0, 0.5)";
+
+                // 該当の商品カードにスクロール
+                highlightCard.scrollIntoView({ behavior: "smooth", block: "center" });
+            }
+        }
+    });
+</script>
+
+<!-- 予約ボタン -->
+<!-- <div class="fab_button">
+    <md-fab label="予約する" class="r-b" type="button" id="reserve_button">
+        <span class="material-icons mdicon-middle" slot="icon">check</span>
+    </md-fab>
+</div> -->
+
+<script>
+    document.addEventListener("DOMContentLoaded", () => {
+    const maxItems = 5;
+    let reserveItem = JSON.parse(localStorage.getItem("reserveItem")) || {0: "None", 1: "None", 2: "None", 3: "None", 4: "None"};
+    let totalPrice = 0;
+
+    // 選択状態を復元する
+    Object.values(reserveItem).forEach(id => {
+        if (id !== "None") {
+            const counterElement = document.getElementById(`r_i_cnt_${id}`);
+            if (counterElement) {
+                let count = parseInt(counterElement.textContent) || 0;
+                counterElement.textContent = count + 1;
+                totalPrice += parseInt(document.getElementById(`r_i_price_${id}`).textContent.replace("円", ""));
+            }
+        }
+    });
+
+    // 合計金額を更新
+    document.getElementById('total_price').textContent = totalPrice;
+
+    // 商品詳細ボタンをクリックした際の動作
+    document.querySelectorAll('.r_i_card').forEach((card) => {
+        const id = card.dataset.id;
+        const detailButton = document.getElementById(`product_detail_${id}`);
+
+        detailButton.addEventListener('click', () => {
+            window.location.href = `/menu/${id}`;
+        });
+    });
+
+    // 商品数の増減
+    document.querySelectorAll('.r_i_card').forEach((card) => {
+        const id = card.dataset.id;
+        const counterElement = document.getElementById(`r_i_cnt_${id}`);
+        const incrementButton = document.getElementById(`r_i_increment_${id}`);
+        const decrementButton = document.getElementById(`r_i_decrement_${id}`);
+
+        incrementButton.addEventListener('click', () => {
+            let selectedCount = Object.values(reserveItem).filter(item => item !== "None").length;
+            if (selectedCount >= maxItems) {
+                alert("選択できる商品は5つまでです。");
+                return;
+            }
+
+            let count = parseInt(counterElement.textContent) || 0;
+            count++;
+            counterElement.textContent = count;
+
+            for (let i = 0; i < maxItems; i++) {
+                if (reserveItem[i] === "None") {
+                    reserveItem[i] = id;
+                    totalPrice += parseInt(document.getElementById(`r_i_price_${id}`).textContent.replace("円", ""));
+                    break;
+                }
+            }
+
+            // 合計金額を更新
+            document.getElementById('total_price').textContent = totalPrice;
+
+            saveToLocalStorage();
+        });
+
+        decrementButton.addEventListener('click', () => {
+            let count = parseInt(counterElement.textContent) || 0;
+            if (count > 0) {
+                count--;
+                counterElement.textContent = count;
+
+                for (let i = 4; i >= 0; i--) {
+                    if (reserveItem[i] === id) {
+                        reserveItem[i] = "None";
+                        totalPrice -= parseInt(document.getElementById(`r_i_price_${id}`).textContent.replace("円", ""));
+                        break;
+                    }
+                }
+
+                // 合計金額を更新
+                document.getElementById('total_price').textContent = totalPrice;
+
+                saveToLocalStorage();
+            }
+        });
+    });
+
+    // ローカルストレージにデータを保存する関数
+    function saveToLocalStorage() {
+        localStorage.setItem("reserveItem", JSON.stringify(reserveItem));
+        localStorage.setItem("totalPrice", JSON.stringify(totalPrice));
+    }
+
+    // 予約ボタンのクリック処理
+    document.getElementById('reserve_button').addEventListener('click', () => {
+        if (window.confirm('予約しますか？')) {
+            // 予約内容をフォームにセット
+            document.getElementById('reserve_item_0').value = reserveItem[0];
+            document.getElementById('reserve_item_1').value = reserveItem[1];
+            document.getElementById('reserve_item_2').value = reserveItem[2];
+            document.getElementById('reserve_item_3').value = reserveItem[3];
+            document.getElementById('reserve_item_4').value = reserveItem[4];
+
+            // ローカルストレージをクリア
+            localStorage.removeItem("reserveItem");
+            localStorage.removeItem("totalPrice");
+
+            // フォームを送信
+            document.getElementById('reserveForm').submit();
+        }
+    });
+
+    // 予約フォームのチェック処理
+    function check() {
+        console.log("予約します。");
+        return true;
+    }
+});
+</script>
+{% endblock %}

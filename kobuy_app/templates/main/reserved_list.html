@@ -1,0 +1,44 @@
+{% extends "layout.html" %}
+
+{% block content %}
+<div class="reserved_menu">
+    <h1 style="text-align: left;">最新の予約した商品</h1>
+</div>
+<table class="table table-hover">
+    <thead>
+    <tr>
+        <th>予約ID</th>
+        <th>予約品１</th>
+        <th>予約品２</th>
+        <th>予約品３</th>
+        <th>予約品４</th>
+        <th>予約品５</th>
+        <th>予約日</th>
+        <th>予約時間</th>
+        <th>合計金額</th>
+        <th>注文の状態</th>
+        <th>詳細 / キャンセル</th>
+    </tr>
+    </thead>
+    <tbody>
+        {% for reserved in reserved %}
+        <tr href="/my_reserved_list/detail/{{ reserved.id }}">
+        <td>{{ reserved.id }}</td>
+        <td>{{ reserved.menu_item_0.productname }}</td>
+        <td>{{ reserved.menu_item_1.productname }}</td>
+        <td>{{ reserved.menu_item_2.productname }}</td>
+        <td>{{ reserved.menu_item_3.productname }}</td>
+        <td>{{ reserved.menu_item_4.productname }}</td>
+        <td>{{ reserved.reserve_day }}</td>
+        <td>{{ reserved.reserve_time }}</td>
+        <td>{{ reserved.price }}</td>
+        <td>{{ reserved.state }}</td>
+        <td><md-filled-button class="btn-detail" href="/my_reserved_list/detail/{{ reserved.id }}">詳細</md-filled-button>
+        <md-filled-button class="btn-cancel" href="/cancel_reserve/{{ reserved.id }}">キャンセル</md-filled-button></td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+
+{% endblock %}

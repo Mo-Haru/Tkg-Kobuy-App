@@ -1,0 +1,101 @@
+{% extends "layout.html" %}
+{% block header %}
+
+        <span class="r_h_title">
+            / ヘルプ
+        </span>
+{% endblock %}
+{% block content %}
+<div style="padding: 5px;">
+    <div class="help_table_contents">
+        <p class="title">目次</p>
+        <md-divider></md-divider>
+        <ul>
+            <li><a href="#1">（１）アカウント作成</a></li>
+            <li><a href="#2">（２）ログイン</a></li>
+            <li><a href="#3">（３）商品の予約</a></li>
+            <li><a href="#4">（４）商品の予約状況確認</a></li>
+            <li><a href="#5">（５）商品の予約状況変更</a></li>
+            <li><a href="#6">（６）商品のキャンセル</a></li>
+
+        </ul>
+    </div>
+    
+    <div id ="1" class="help_contents_area">
+        <h2>（１）アカウント作成</h2>
+            <p class="title">アカウントの作成方法</p>
+            <md-divider></md-divider>
+            <p>画面上部の<md-icon class="material-icons here">person_add</md-icon>アカウント作成を押してください。</p>
+            <p>ユーザー登録画面が表示されます。そこで本名、学年・組・出席番号、メールアドレスを正しく入力してください。</p>
+            <p>先生など学年がない人は、４年１組１番でご登録ください。</p>
+            <p>パスワードは他人推測されにくい８文字以上の文字列を使用してください。</p>
+            <p>確認コードは、学校から提供されたGoogleアカウントを使用してください。<span class="warning">（注意：学校で提供されたメールアドレス以外は使用できません。）</span></p>
+            <p>登録が完了すると、ログインページに飛ばされます</p>
+            <p>パスワードを保存するか聞かれる場合があります。どちらを選択してもかまいません、保存することでパスワード忘れがなくなるため、保存することを強く推奨します。</p>
+    </div>
+    
+    <div id ="2" class="help_contents_area">
+        <h2>（２）ログイン</h2>
+            <p class="title">ログイン方法</p>
+            <md-divider></md-divider>
+            <p>画面上部の<md-icon class="material-icons here">login</md-icon>ログインを押してください。</p>
+            <p>するとログイン画面が表示されます。先ほど入力したメールアドレスとパスワードを入力してください。</p>
+            <p>ログインが成功すると、トップページに飛ばされます。</p>
+    </div>
+
+
+    <div id ="3" class="help_contents_area">
+    <h2>（３）商品の予約</h2>
+        <p class="title">商品の予約方法</p>
+        <md-divider></md-divider>
+        <p>まず、左のナビゲーションバーからショッピングカートのマーク（<md-icon class="material-icons here">shopping_cart</md-icon>）のマークがある<a href="/reserve">予約</a>をクリックします。</p>
+        <p><strong>ログインしていない場合：</strong>ログインページに飛ばされます。そこのページでログインすると予約ページに戻ります。</p>
+        <p><strong>まだルールに同意していない場合：</strong>「購買予約アプリ使用上の注意」という画面が表示されます。内容を確認し、同意する場合は「同意する」をクリックしてください。同意しない場合は、元のページに戻るをクリックしページを閉じてください。</p>
+
+    </div>
+
+</div>
+
+
+<style>
+    .help_table_contents {
+        width: 500px;
+        padding: 10px;
+        margin: 0 auto;
+        border: 1px solid var(--md-sys-color-outline);
+    }
+    .help_table_contents li {
+        margin-bottom: 10px;
+        list-style-type: none;
+        font-size: 16px;
+        height: 20px;
+        line-height: 20px;
+    }
+    .help_table_contents .title {
+        font-size: 20px;
+        font-weight: bold;
+        text-align: center;
+        margin-bottom: 10px;
+    }
+    .help_contents_area {
+        padding: 10px;
+        margin-bottom: 10px;
+    }
+    .help_contents_area .title {
+        font-size: 20px;
+        font-weight: bold;
+        margin-bottom: 10px;
+    }
+    .help_contents_area p {
+        font-size: large;
+    }
+    .material-icons .here {
+        font-size: 25px;
+        color: black;
+    }
+    .warning {
+        color: red;
+    }
+</style>
+
+{% endblock %}

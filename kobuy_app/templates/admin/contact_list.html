@@ -1,0 +1,36 @@
+{% extends "admin_layout.html" %}
+
+{% block content %}
+
+
+<h1>お問い合わせ一覧</h1>
+
+<table class="table">
+  <thead>
+    <tr style="background-color: var(--md-sys-color-secondary-container); font-size: medium;">
+      <th style="border-radius: 20px 0 0 0;">Id</th>
+      <th>名前</th>
+      <th>タイトル</th>
+      <th>日付</th>
+      <th>時間</th>
+      <th style="border-radius: 0 20px 0 0;">詳細</th>
+    </tr>
+  </thead>
+    <tbody>
+      {% for contact in contacts %}
+        <tr>
+          <td>{{ contact.id }}</td>
+          <td>{{ contact.user.lastname }}{{ contact.user.firstname }}</td>
+          <td>{{ contact.title }}</td>
+          <td>{{ contact.contact_day }}</td>
+          <td>{{ contact.contact_time }}</td>
+          <td>
+              <md-filled-button class="" href="/admin/contact_list/detail/{{ contact.id }}">詳細</md-filled-button>
+          </td>
+        </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+
+
+{% endblock content %}

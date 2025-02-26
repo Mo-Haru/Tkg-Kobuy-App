@@ -1,0 +1,15 @@
+{% extends "admin_layout.html" %}
+
+{% block content %}
+
+
+<h2>メニュー削除</h2>
+<p>Id: {{ menu_dic.id }}</p>
+<p>メニュー名: {{ menu_dic.product_name }}</p>
+<p>このアイテムを削除しますか？この動作は取り消すことはできません。</p>
+<form method="POST">
+    
+    {{ form.delete_submit(class="btn btn-danger") }}
+    <a href="{{ url_for('menu_edit') }}" class="btn btn-secondary">キャンセル</a>
+</form>
+{% endblock %}

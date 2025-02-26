@@ -1,0 +1,50 @@
+{% extends "admin_layout.html" %}
+
+
+{% block content %}
+
+
+
+
+<div class="" style="padding: 5px;">
+   <h2>今日の在庫設定</h2>
+   <form method="POST" action="/admin/menu/stock/first_setup" enctype="multipart/form-data">
+   <table class="table">
+   <thead>
+     <tr style="background-color: var(--md-sys-color-secondary-container); font-size: medium;">
+       <th style="border-radius: 20px 0 0 0;">Id</th>
+       <th>商品名</th>
+       <th style="border-radius: 0 20px 0 0;">残りの在庫数</th>
+     </tr>
+   </thead>
+   <tbody>
+   {% for menu in menu %}
+   <tr>
+       <td><a href="/admin/menu/{{ menu.id }}">{{ menu.id }}</a></td>
+       <td><a href="/admin/menu/{{ menu.id }}">{{ menu.productname }}</a></td>
+       <td>
+           <label for="stock_{{ menu.id }}"></label>
+           <md-outlined-text-field id="stock_{{ menu.id }}" name="stock_post_{{ menu.id }}" label="在庫数" value="0">
+           </md-outlined-text-field>
+       </td>
+   </tr>
+         {% endfor %}
+       </tbody>
+     </tbody>
+   </table>
+<md-filled-tonal-button type="submit">今日の在庫を確定する</md-filled-tonal-button>
+
+   
+</div>
+
+</form>
+
+
+<style>
+
+
+
+
+
+</style>
+{% endblock %}
