@@ -2,84 +2,379 @@
 
 {% block content %}
 
-<div class="container mt-4">
-    <h2>Menu編集</h2>
-    <form method="POST" enctype="multipart/form-data">
-        {{ form.csrf_token }}
-        <div class="form-floating mb-3">
-            {{ form.product_name(class="form-control", value=menu_dic.productname) }}
-            <label for="floatingInput">{{ form.product_name.label }}</label>
-        </div>
-        {% for error in form.product_name.errors %}
-        <span style="color: red;">[{{ error }}]</span>
-        {% endfor %}
-        <br>
-        <div class="form-floating mb-3">
-            {{ form.product_price(class="form-control", value=menu_dic.price) }}
-            <label for="floatingInput">{{ form.product_price.label }}</label>
-        </div>
-        {% for error in form.product_price.errors %}
-        <span style="color: red;">[{{ error }}]</span>
-        {% endfor %}
-        <br>
-        <div class="form-floating mb-3">
-            {{ form.explanation(class="form-control", value=menu_dic.explanation) }}
-            <label for="floatingInput">{{ form.explanation.label }}</label>
-        </div>
-        {% for error in form.explanation.errors %}
-        <span style="color: red;">[{{ error }}]</span>
-        {% endfor %}
-        <br>
-        
-        <div class="form-floating mb-3">
-            {{ form.buy_cnt(class="form-control", value=menu_dic.buy_cnt) }}
-            <label for="floatingInput">{{ form.buy_cnt.label }}</label>
-        </div>
-        {% for error in form.buy_cnt.errors %}
-        <span style="color: red;">[{{ error }}]</span>
-        {% endfor %}
-        <br>
+<div class="menu-edit-container">
+    <div class="page-header">
+        <h2>Menu編集</h2>
+        <p class="page-description">
+            商品の情報を編集できます。変更後は保存ボタンを押してください。
+        </p>
+    </div>
 
-        <div class="form-floating md-3">
-            {{ form.category(type="hidden", class="form-control", id="hidden_category", value=menu_dic.category) }}
-            <!-- <input type="hidden" class="form-control" id="hidden_category" value="{{ menu_dic.category }}"> -->
-            <select class="form-select" name="category" id="category">
-                <option value="{{ menu_dic.category_id }}" selected>
-                    {% for category in categorys %}
-                    {% if category.id == menu_dic.category_id %}
-                    {{ category.category }}
-                    {% endif %}
+    <div class="form-container">
+        <form method="POST" enctype="multipart/form-data" class="menu-edit-form">
+            {{ form.csrf_token }}
+            
+            <div class="form-section">
+                <h3>基本情報</h3>
+                
+                <div class="form-group">
+                    <label for="{{ form.product_name.id }}" class="form-label">
+                        {{ form.product_name.label }}
+                    </label>
+                    {{ form.product_name(class="form-control", value=menu_dic.productname, placeholder="商品名を入力") }}
+                    {% for error in form.product_name.errors %}
+                    <div class="error-message">
+                        <span class="material-icons">error</span>
+                        {{ error }}
+                    </div>
                     {% endfor %}
-                </option>
-                {% for category in categorys %}
-                {% if category.id != menu_dic.category_id %}
-                    <option value="{{ category.id }}">{{ category.category }}</option>
-                {% endif %}
-                {% endfor %}
-            </select>
-            <label for="category">{{ form.category.label }}</label>
-        </div>
-        <br>
-        
-        <script>
-            document.addEventListener("DOMContentLoaded", () => {
-                const hiddenCategoryInput = document.getElementById('hidden_category');
-                const categorySelect = document.getElementById('category');
-        
-                categorySelect.addEventListener('change', () => {
-                    hiddenCategoryInput.value = categorySelect.value;
-                });
-            });
-        </script>
+                </div>
 
-        {{ form.product_image(class="form-control",value=menu_dic.product_image) }}
-        {% for error in form.product_image.errors %}
-        <span style="color: red;">[{{ error }}]</span>
-        {% endfor %}
-        <br>
-        {{ form.submit }}
+                <div class="form-group">
+                    <label for="{{ form.product_price.id }}" class="form-label">
+                        {{ form.product_price.label }}
+                    </label>
+                    <div class="price-input-group">
+                        <span class="currency-symbol">¥</span>
+                        {{ form.product_price(class="form-control", value=menu_dic.price, placeholder="価格を入力") }}
+                    </div>
+                    {% for error in form.product_price.errors %}
+                    <div class="error-message">
+                        <span class="material-icons">error</span>
+                        {{ error }}
+                    </div>
+                    {% endfor %}
+                </div>
 
-    </form>
+                <div class="form-group">
+                    <label for="{{ form.explanation.id }}" class="form-label">
+                        {{ form.explanation.label }}
+                    </label>
+                    {{ form.explanation(class="form-control", value=menu_dic.explanation, placeholder="商品の説明を入力", rows="3") }}
+                    {% for error in form.explanation.errors %}
+                    <div class="error-message">
+                        <span class="material-icons">error</span>
+                        {{ error }}
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <div class="form-section">
+                <h3>在庫・カテゴリ設定</h3>
+                
+                <div class="form-group">
+                    <label for="{{ form.buy_cnt.id }}" class="form-label">
+                        {{ form.buy_cnt.label }}
+                    </label>
+                    {{ form.buy_cnt(class="form-control", value=menu_dic.buy_cnt, placeholder="購入可能数を入力") }}
+                    {% for error in form.buy_cnt.errors %}
+                    <div class="error-message">
+                        <span class="material-icons">error</span>
+                        {{ error }}
+                    </div>
+                    {% endfor %}
+                </div>
+
+                <div class="form-group">
+                    <label for="category" class="form-label">
+                        {{ form.category.label }}
+                    </label>
+                    {{ form.category(type="hidden", class="form-control", id="hidden_category", value=menu_dic.category) }}
+                    <select class="form-control" name="category" id="category">
+                        <option value="{{ menu_dic.category_id }}" selected>
+                            {% for category in categorys %}
+                            {% if category.id == menu_dic.category_id %}
+                            {{ category.category }}
+                            {% endif %}
+                            {% endfor %}
+                        </option>
+                        {% for category in categorys %}
+                        {% if category.id != menu_dic.category_id %}
+                            <option value="{{ category.id }}">{{ category.category }}</option>
+                        {% endif %}
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+
+            <div class="form-section">
+                <h3>商品画像</h3>
+                
+                <div class="form-group">
+                    <label for="{{ form.product_image.id }}" class="form-label">
+                        {{ form.product_image.label }}
+                    </label>
+                    <div class="file-input-container">
+                        {{ form.product_image(class="form-control file-input", value=menu_dic.product_image) }}
+                        <div class="file-input-info">
+                            <span class="material-icons">upload</span>
+                            <span>画像ファイルを選択してください</span>
+                        </div>
+                    </div>
+                    {% for error in form.product_image.errors %}
+                    <div class="error-message">
+                        <span class="material-icons">error</span>
+                        {{ error }}
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <div class="form-actions">
+                <md-filled-button type="submit" class="save-btn">
+                    <span slot="icon" class="material-icons">save</span>
+                    保存
+                </md-filled-button>
+                
+                <md-outlined-button type="button" onclick="history.back()" class="cancel-btn">
+                    <span slot="icon" class="material-icons">arrow_back</span>
+                    戻る
+                </md-outlined-button>
+            </div>
+        </form>
+    </div>
 </div>
+
+<style>
+.menu-edit-container {
+    padding: var(--spacing-lg);
+    max-width: 800px;
+    margin: 0 auto;
+}
+
+.page-header {
+    margin-bottom: var(--spacing-xl);
+}
+
+.page-header h2 {
+    font-size: 28px;
+    font-weight: 600;
+    color: var(--md-sys-color-on-surface);
+    margin-bottom: var(--spacing-sm);
+}
+
+.page-description {
+    color: var(--md-sys-color-on-surface-variant);
+    margin-bottom: var(--spacing-lg);
+}
+
+.form-container {
+    background: var(--md-sys-color-surface-container);
+    border-radius: var(--border-radius-lg);
+    padding: var(--spacing-xl);
+    box-shadow: var(--shadow-sm);
+}
+
+.menu-edit-form {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-xl);
+}
+
+.form-section {
+    border-bottom: 1px solid var(--md-sys-color-outline);
+    padding-bottom: var(--spacing-lg);
+}
+
+.form-section:last-child {
+    border-bottom: none;
+    padding-bottom: 0;
+}
+
+.form-section h3 {
+    font-size: 20px;
+    font-weight: 600;
+    color: var(--md-sys-color-on-surface);
+    margin-bottom: var(--spacing-lg);
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+}
+
+.form-group {
+    margin-bottom: var(--spacing-lg);
+}
+
+.form-label {
+    display: block;
+    font-weight: 500;
+    color: var(--md-sys-color-on-surface);
+    margin-bottom: var(--spacing-sm);
+    font-size: 14px;
+}
+
+.form-control {
+    width: 100%;
+    padding: var(--spacing-md);
+    border: 1px solid var(--md-sys-color-outline);
+    border-radius: var(--border-radius-md);
+    background: var(--md-sys-color-surface-container-low);
+    color: var(--md-sys-color-on-surface);
+    font-size: 16px;
+    transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+    box-sizing: border-box;
+}
+
+.form-control:focus {
+    outline: none;
+    border-color: var(--md-sys-color-primary);
+    box-shadow: 0 0 0 2px var(--md-sys-color-primary-container);
+}
+
+.form-control::placeholder {
+    color: var(--md-sys-color-on-surface-variant);
+}
+
+.price-input-group {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.currency-symbol {
+    position: absolute;
+    left: var(--spacing-md);
+    color: var(--md-sys-color-on-surface-variant);
+    font-weight: 500;
+    z-index: 1;
+}
+
+.price-input-group .form-control {
+    padding-left: calc(var(--spacing-md) + 20px);
+}
+
+.error-message {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-xs);
+    color: var(--md-sys-color-error);
+    font-size: 12px;
+    margin-top: var(--spacing-xs);
+}
+
+.error-message .material-icons {
+    font-size: 14px;
+}
+
+.file-input-container {
+    position: relative;
+}
+
+.file-input {
+    opacity: 0;
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    cursor: pointer;
+    z-index: 2;
+}
+
+.file-input-info {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+    padding: var(--spacing-md);
+    border: 2px dashed var(--md-sys-color-outline);
+    border-radius: var(--border-radius-md);
+    background: var(--md-sys-color-surface-container-low);
+    color: var(--md-sys-color-on-surface-variant);
+    transition: border-color var(--transition-fast), background-color var(--transition-fast);
+}
+
+.file-input-container:hover .file-input-info {
+    border-color: var(--md-sys-color-primary);
+    background: var(--md-sys-color-primary-container);
+    color: var(--md-sys-color-on-primary-container);
+}
+
+.form-actions {
+    display: flex;
+    gap: var(--spacing-md);
+    justify-content: flex-end;
+    flex-wrap: wrap;
+    margin-top: var(--spacing-xl);
+    padding-top: var(--spacing-lg);
+    border-top: 1px solid var(--md-sys-color-outline);
+}
+
+.save-btn {
+    background-color: var(--md-sys-color-primary);
+    color: var(--md-sys-color-on-primary);
+}
+
+.cancel-btn {
+    color: var(--md-sys-color-on-surface-variant);
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .menu-edit-container {
+        padding: var(--spacing-md);
+    }
+    
+    .page-header h2 {
+        font-size: 24px;
+    }
+    
+    .form-container {
+        padding: var(--spacing-lg);
+    }
+    
+    .form-section h3 {
+        font-size: 18px;
+    }
+    
+    .form-actions {
+        flex-direction: column;
+    }
+    
+    .form-actions md-filled-button,
+    .form-actions md-outlined-button {
+        width: 100%;
+    }
+}
+
+@media (max-width: 480px) {
+    .menu-edit-container {
+        padding: var(--spacing-sm);
+    }
+    
+    .form-container {
+        padding: var(--spacing-md);
+    }
+    
+    .form-control {
+        font-size: 16px; /* Prevent zoom on iOS */
+    }
+}
+</style>
+
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+    const hiddenCategoryInput = document.getElementById('hidden_category');
+    const categorySelect = document.getElementById('category');
+
+    categorySelect.addEventListener('change', () => {
+        hiddenCategoryInput.value = categorySelect.value;
+    });
+    
+    // File input styling
+    const fileInput = document.querySelector('.file-input');
+    const fileInputInfo = document.querySelector('.file-input-info');
+    
+    if (fileInput && fileInputInfo) {
+        fileInput.addEventListener('change', (e) => {
+            const fileName = e.target.files[0]?.name || 'ファイルが選択されていません';
+            fileInputInfo.innerHTML = `
+                <span class="material-icons">upload</span>
+                <span>${fileName}</span>
+            `;
+        });
+    }
+});
+</script>
 
 {% endblock %}

@@ -99,6 +99,31 @@ class Notification(db.Model):
     post_time = db.Column(db.DateTime, default = datetime.datetime.now().time())
     poster = db.Column(db.String(128), nullable=False)
 
+# ------------------------プッシュ通知------------------------
+class PushSubscription(db.Model):
+    __tablename__ = 'push_subscription'
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    endpoint = db.Column(db.Text, nullable=False)
+    p256dh = db.Column(db.Text, nullable=False)
+    auth = db.Column(db.Text, nullable=False)
+    created_at = db.Column(db.DateTime, default=datetime.datetime.now)
+    
+    user = db.relationship('User', backref='push_subscriptions')
+
+class AppNotification(db.Model):
+    __tablename__ = 'app_notification'
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    title = db.Column(db.String(128), nullable=False)
+    message = db.Column(db.Text, nullable=False)
+    type = db.Column(db.String(50), nullable=False, default='info')  # info, success, warning, error
+    is_read = db.Column(db.Boolean, default=False)
+    created_at = db.Column(db.DateTime, default=datetime.datetime.now)
+    related_reservation_id = db.Column(db.Integer, db.ForeignKey('reserved.id'), nullable=True)
+    
+    user = db.relationship('User', backref='notifications')
+    reservation = db.relationship('Reserved', backref='notifications')
 
 #----------------------予約された商品----------------------
 class Reserved(db.Model):

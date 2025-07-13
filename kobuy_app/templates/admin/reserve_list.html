@@ -1,69 +1,514 @@
 {% extends "admin_layout.html" %}
 
 {% block content %}
-<div class="" style="padding: 5px;">
-    <h2>予約者一覧{% if allday is not true %}（本日分のみ表示中）{% endif %}</h2>
-    <p>
-      ここでは、予約者の確認をすることができます。
-    </p>
-    <p>
-      ・準備完了：商品の準備ができたら押します。
-    </p>
-    <p>
-      ・受取済み：生徒・教員が受け取った場合に押します。
-    </p>
-    <p>
-      ・キャンセル：予約をキャンセルする場合に押します。この場合は、キャンセル(購買側都合)になります。
-    </p>
+<div class="reserve-list-container">
+    <div class="page-header">
+        <div class="header-content">
+            <h2>予約者一覧{% if allday is not true %}（本日分のみ表示中）{% endif %}</h2>
+            <p class="page-description">
+                ここでは、予約者の確認をすることができます。
+            </p>
+        </div>
+        <div class="status-guide">
+            <div class="status-item">
+                <span class="status-badge status-ready">準備完了</span>
+                <span>商品の準備ができたら押します。</span>
+            </div>
+            <div class="status-item">
+                <span class="status-badge status-completed">受取済み</span>
+                <span>生徒・教員が受け取った場合に押します。</span>
+            </div>
+            <div class="status-item">
+                <span class="status-badge status-cancelled">キャンセル</span>
+                <span>予約をキャンセルする場合に押します。</span>
+            </div>
+        </div>
+    </div>
+
     {% if allday is true %}
     <div class="alert alert-info" role="alert">
-      現在、すべての予約を表示しています。今日予約された商品だけを確認したい場合は<a href="/admin/reserve_list/today" class="alert-link">こちら(/admin/reserve_list/today)</a>にアクセスすることを推奨します。
+        <span class="material-icons">info</span>
+        現在、すべての予約を表示しています。今日予約された商品だけを確認したい場合は
+        <a href="/admin/reserve_list/today" class="alert-link">こちら</a>にアクセスすることを推奨します。
     </div>
     {% endif %}
-    <table class="table">
-        <thead>
-          <tr style="background-color: var(--md-sys-color-secondary-container); font-size: medium;">
-            <th style="border-radius: 20px 0 0 0;">Id</th>
-            <th>学年/組/番号</th>
-            <th>予約者</th>
-            <th>予約品１</th>
-            <th>２</th>
-            <th>３</th>
-            <th>４</th>
-            <th>５</th>
-            <th>ステータス</th>
-            <th>予約時間</th>
-            {% if allday is true %}
-            <th>予約日</th>
-            {% endif %}
-            <th>価格</th>
-            <th style="border-radius: 0 20px 0 0;">ステータス変更</th>
-          </tr>
-        </thead>
-        <tbody>
-          {% for reserve in reserve %}
-            <tr {% if reserve.state == "キャンセル" %}style="background-color: #f2dede;"{% endif %}>
-              <td><a href="/admin/reserve/detail/{{ reserve.id }}">{{ reserve.id }}</a></td>
-              <td>{{ reserve.user.grade }}年{{ reserve.user.cls }}組{{  reserve.user.num }}番</td>
-              <td>{{ reserve.user.lastname }}{{ reserve.user.firstname }}</td>
-              <td>{{ reserve.menu_item_0.productname }}</td>
-              <td>{{ reserve.menu_item_1.productname }}</td>
-              <td>{{ reserve.menu_item_2.productname }}</td>
-              <td>{{ reserve.menu_item_3.productname }}</td>
-              <td>{{ reserve.menu_item_4.productname }}</td>
-              <td>{{ reserve.state }}</td>
-              <td>{{ reserve.reserve_time }}</td>
-              {% if allday is true %}
-              <td>{{ reserve.reserve_day }}</td>
-              {% endif %}
-              <td>{{ reserve.price }}</td>
-              <td>
-                <md-filled-button class="btn-success" href="/admin/reserve/state_rdy/{{ reserve.id }}">準備完了</md-filled-button>
-                <md-filled-button class="btn-crp" href="/admin/reserve/state_rcp/{{ reserve.id }}">受取済み</md-filled-button>
-                <md-filled-button class="" href="/admin/reserve/state_cancel/{{ reserve.id}}">キャンセル</md-filled-button>
-            </tr>
-          {% endfor %}
-        </tbody>
-      </table>
+
+    <!-- Desktop Table View -->
+    <div class="table-container desktop-only">
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>学年/組/番号</th>
+                    <th>予約者</th>
+                    <th>予約品１</th>
+                    <th>２</th>
+                    <th>３</th>
+                    <th>４</th>
+                    <th>５</th>
+                    <th>ステータス</th>
+                    <th>予約時間</th>
+                    {% if allday is true %}
+                    <th>予約日</th>
+                    {% endif %}
+                    <th>価格</th>
+                    <th>操作</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for reserve in reserve %}
+                <tr {% if reserve.state == "キャンセル" %}class="cancelled-row"{% endif %}>
+                    <td>
+                        <button class="detail-btn" onclick="showReservationDetail({{ reserve.id }})">
+                            {{ reserve.id }}
+                        </button>
+                    </td>
+                    <td>{{ reserve.user.grade }}年{{ reserve.user.cls }}組{{  reserve.user.num }}番</td>
+                    <td>{{ reserve.user.lastname }}{{ reserve.user.firstname }}</td>
+                    <td>
+                        {% if reserve.menu_item_0 %}
+                        <button class="product-btn" onclick="showProductDetail({{ reserve.menu_item_0.id }})">
+                            {{ reserve.menu_item_0.productname }}
+                        </button>
+                        {% else %}
+                        -
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if reserve.menu_item_1 %}
+                        <button class="product-btn" onclick="showProductDetail({{ reserve.menu_item_1.id }})">
+                            {{ reserve.menu_item_1.productname }}
+                        </button>
+                        {% else %}
+                        -
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if reserve.menu_item_2 %}
+                        <button class="product-btn" onclick="showProductDetail({{ reserve.menu_item_2.id }})">
+                            {{ reserve.menu_item_2.productname }}
+                        </button>
+                        {% else %}
+                        -
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if reserve.menu_item_3 %}
+                        <button class="product-btn" onclick="showProductDetail({{ reserve.menu_item_3.id }})">
+                            {{ reserve.menu_item_3.productname }}
+                        </button>
+                        {% else %}
+                        -
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if reserve.menu_item_4 %}
+                        <button class="product-btn" onclick="showProductDetail({{ reserve.menu_item_4.id }})">
+                            {{ reserve.menu_item_4.productname }}
+                        </button>
+                        {% else %}
+                        -
+                        {% endif %}
+                    </td>
+                    <td>
+                        <span class="status-badge status-{{ reserve.state.lower() }}">
+                            {{ reserve.state }}
+                        </span>
+                    </td>
+                    <td>{{ reserve.reserve_time }}</td>
+                    {% if allday is true %}
+                    <td>{{ reserve.reserve_day }}</td>
+                    {% endif %}
+                    <td>¥{{ reserve.price }}</td>
+                    <td>
+                        <div class="action-buttons">
+                            {% if reserve.state == "予約済み" %}
+                            <md-filled-tonal-button onclick="updateReservationStatus({{ reserve.id }}, 'ready')" class="action-btn">
+                                <span slot="icon" class="material-icons">check_circle</span>
+                                準備完了
+                            </md-filled-tonal-button>
+                            {% elif reserve.state == "準備完了" %}
+                            <md-filled-tonal-button onclick="updateReservationStatus({{ reserve.id }}, 'completed')" class="action-btn">
+                                <span slot="icon" class="material-icons">done</span>
+                                受取済み
+                            </md-filled-tonal-button>
+                            {% endif %}
+                            {% if reserve.state != "キャンセル" and reserve.state != "受取済み" %}
+                            <md-filled-tonal-button onclick="updateReservationStatus({{ reserve.id }}, 'cancelled')" class="action-btn cancel-btn">
+                                <span slot="icon" class="material-icons">cancel</span>
+                                キャンセル
+                            </md-filled-tonal-button>
+                            {% endif %}
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Mobile Card View -->
+    <div class="mobile-cards mobile-only">
+        {% for reserve in reserve %}
+        <div class="reservation-card {% if reserve.state == 'キャンセル' %}cancelled{% endif %}">
+            <div class="card-header">
+                <div class="reservation-id">
+                    <button class="detail-btn" onclick="showReservationDetail({{ reserve.id }})">
+                        #{{ reserve.id }}
+                    </button>
+                </div>
+                <div class="reservation-status">
+                    <span class="status-badge status-{{ reserve.state.lower() }}">
+                        {{ reserve.state }}
+                    </span>
+                </div>
+            </div>
+            
+            <div class="card-body">
+                <div class="reservation-info">
+                    <div class="info-row">
+                        <span class="label">予約者:</span>
+                        <span class="value">{{ reserve.user.lastname }}{{ reserve.user.firstname }}</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="label">学年/組/番号:</span>
+                        <span class="value">{{ reserve.user.grade }}年{{ reserve.user.cls }}組{{ reserve.user.num }}番</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="label">予約時間:</span>
+                        <span class="value">{{ reserve.reserve_time }}</span>
+                    </div>
+                    {% if allday is true %}
+                    <div class="info-row">
+                        <span class="label">予約日:</span>
+                        <span class="value">{{ reserve.reserve_day }}</span>
+                    </div>
+                    {% endif %}
+                    <div class="info-row">
+                        <span class="label">価格:</span>
+                        <span class="value price">¥{{ reserve.price }}</span>
+                    </div>
+                </div>
+                
+                <div class="reservation-items">
+                    <h4>予約商品</h4>
+                    <div class="items-list">
+                        {% if reserve.menu_item_0 %}
+                        <div class="item">
+                            <button class="product-btn" onclick="showProductDetail({{ reserve.menu_item_0.id }})">
+                                {{ reserve.menu_item_0.productname }}
+                            </button>
+                        </div>
+                        {% endif %}
+                        {% if reserve.menu_item_1 %}
+                        <div class="item">
+                            <button class="product-btn" onclick="showProductDetail({{ reserve.menu_item_1.id }})">
+                                {{ reserve.menu_item_1.productname }}
+                            </button>
+                        </div>
+                        {% endif %}
+                        {% if reserve.menu_item_2 %}
+                        <div class="item">
+                            <button class="product-btn" onclick="showProductDetail({{ reserve.menu_item_2.id }})">
+                                {{ reserve.menu_item_2.productname }}
+                            </button>
+                        </div>
+                        {% endif %}
+                        {% if reserve.menu_item_3 %}
+                        <div class="item">
+                            <button class="product-btn" onclick="showProductDetail({{ reserve.menu_item_3.id }})">
+                                {{ reserve.menu_item_3.productname }}
+                            </button>
+                        </div>
+                        {% endif %}
+                        {% if reserve.menu_item_4 %}
+                        <div class="item">
+                            <button class="product-btn" onclick="showProductDetail({{ reserve.menu_item_4.id }})">
+                                {{ reserve.menu_item_4.productname }}
+                            </button>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            
+            <div class="card-actions">
+                {% if reserve.state == "予約済み" %}
+                <md-filled-tonal-button onclick="updateReservationStatus({{ reserve.id }}, 'ready')" class="action-btn">
+                    <span slot="icon" class="material-icons">check_circle</span>
+                    準備完了
+                </md-filled-tonal-button>
+                {% elif reserve.state == "準備完了" %}
+                <md-filled-tonal-button onclick="updateReservationStatus({{ reserve.id }}, 'completed')" class="action-btn">
+                    <span slot="icon" class="material-icons">done</span>
+                    受取済み
+                </md-filled-tonal-button>
+                {% endif %}
+                {% if reserve.state != "キャンセル" and reserve.state != "受取済み" %}
+                <md-filled-tonal-button onclick="updateReservationStatus({{ reserve.id }}, 'cancelled')" class="action-btn cancel-btn">
+                    <span slot="icon" class="material-icons">cancel</span>
+                    キャンセル
+                </md-filled-tonal-button>
+                {% endif %}
+            </div>
+        </div>
+        {% endfor %}
+    </div>
 </div>
+
+<style>
+.reserve-list-container {
+    padding: var(--spacing-lg);
+}
+
+.page-header {
+    background: var(--gradient-card);
+    border-radius: var(--border-radius-xl);
+    padding: var(--spacing-xl);
+    margin-bottom: var(--spacing-xl);
+    box-shadow: var(--shadow-lg);
+    backdrop-filter: blur(20px);
+    border: 1px solid rgba(134, 239, 172, 0.2);
+    position: relative;
+    overflow: hidden;
+}
+
+.page-header::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: var(--md-sys-color-primary);
+    opacity: 0.01;
+    z-index: -1;
+}
+
+.page-header h2 {
+    font-size: 28px;
+    font-weight: 700;
+    color: var(--md-sys-color-on-surface);
+    margin-bottom: var(--spacing-sm);
+}
+
+.page-description {
+    color: var(--md-sys-color-on-surface-variant);
+    margin-bottom: var(--spacing-lg);
+    font-weight: 500;
+}
+
+.status-guide {
+    display: flex;
+    gap: var(--spacing-lg);
+    flex-wrap: wrap;
+    margin-bottom: var(--spacing-lg);
+}
+
+.status-item {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+    font-size: 14px;
+    color: var(--md-sys-color-on-surface-variant);
+}
+
+.table-container {
+    background: var(--gradient-card);
+    border-radius: var(--border-radius-xl);
+    overflow: hidden;
+    box-shadow: var(--shadow-lg);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(134, 239, 172, 0.2);
+}
+
+.detail-btn, .product-btn {
+    background: none;
+    border: none;
+    color: var(--md-sys-color-primary);
+    text-decoration: underline;
+    cursor: pointer;
+    padding: 0;
+    font-size: inherit;
+    font-family: inherit;
+}
+
+.detail-btn:hover, .product-btn:hover {
+    color: var(--md-sys-color-primary-fixed-dim);
+}
+
+.action-buttons {
+    display: flex;
+    gap: var(--spacing-xs);
+    flex-wrap: wrap;
+}
+
+.action-btn {
+    font-size: 12px;
+    height: 32px;
+    padding: 0 var(--spacing-sm);
+}
+
+.cancelled-row {
+    opacity: 0.6;
+    background-color: var(--md-sys-color-error-container);
+}
+
+/* Mobile Card Styles */
+.mobile-cards {
+    display: none;
+    gap: var(--spacing-md);
+}
+
+.reservation-card {
+    background: var(--gradient-card);
+    border-radius: var(--border-radius-xl);
+    border: 1px solid rgba(134, 239, 172, 0.2);
+    overflow: hidden;
+    box-shadow: var(--shadow-md);
+    transition: all var(--transition-normal);
+    backdrop-filter: blur(10px);
+}
+
+.reservation-card:hover {
+    box-shadow: var(--shadow-xl);
+    transform: translateY(-2px);
+}
+
+.reservation-card.cancelled {
+    opacity: 0.6;
+    background-color: var(--md-sys-color-error-container);
+}
+
+.card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: var(--spacing-md);
+    background: var(--md-sys-color-surface-container-high);
+    border-bottom: 1px solid var(--md-sys-color-outline);
+}
+
+.reservation-id .detail-btn {
+    font-weight: 600;
+    font-size: 16px;
+}
+
+.card-body {
+    padding: var(--spacing-md);
+}
+
+.reservation-info {
+    margin-bottom: var(--spacing-md);
+}
+
+.info-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: var(--spacing-xs);
+    font-size: 14px;
+}
+
+.info-row .label {
+    color: var(--md-sys-color-on-surface-variant);
+    font-weight: 500;
+}
+
+.info-row .value {
+    color: var(--md-sys-color-on-surface);
+    font-weight: 600;
+}
+
+.info-row .value.price {
+    color: var(--md-sys-color-primary);
+    font-size: 16px;
+}
+
+.reservation-items h4 {
+    font-size: 16px;
+    font-weight: 600;
+    margin-bottom: var(--spacing-sm);
+    color: var(--md-sys-color-on-surface);
+}
+
+.items-list {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-xs);
+}
+
+.item .product-btn {
+    width: 100%;
+    text-align: left;
+    padding: var(--spacing-xs);
+    border-radius: var(--border-radius-sm);
+    background: var(--md-sys-color-surface-variant);
+    color: var(--md-sys-color-on-surface);
+    text-decoration: none;
+    transition: background-color var(--transition-fast);
+}
+
+.item .product-btn:hover {
+    background: var(--md-sys-color-surface-container-high);
+    color: var(--md-sys-color-primary);
+}
+
+.card-actions {
+    padding: var(--spacing-md);
+    border-top: 1px solid var(--md-sys-color-outline);
+    background: var(--md-sys-color-surface-container-low);
+    display: flex;
+    gap: var(--spacing-sm);
+    flex-wrap: wrap;
+}
+
+.card-actions .action-btn {
+    flex: 1;
+    min-width: 120px;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .reserve-list-container {
+        padding: var(--spacing-md);
+    }
+    
+    .page-header h2 {
+        font-size: 24px;
+    }
+    
+    .status-guide {
+        flex-direction: column;
+        gap: var(--spacing-sm);
+    }
+    
+    .desktop-only {
+        display: none;
+    }
+    
+    .mobile-only {
+        display: flex;
+        flex-direction: column;
+    }
+    
+    .card-actions {
+        flex-direction: column;
+    }
+    
+    .card-actions .action-btn {
+        width: 100%;
+    }
+}
+
+@media (min-width: 769px) {
+    .mobile-only {
+        display: none;
+    }
+    
+    .desktop-only {
+        display: block;
+    }
+}
+</style>
 {% endblock %}

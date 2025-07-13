@@ -1,0 +1,434 @@
+{% extends "admin_layout.html" %}
+
+{% block content %}
+<div class="statistics-container">
+    <div class="page-header">
+        <h1 class="page-title">
+            <span class="material-icons">bar_chart</span>
+            統計情報
+        </h1>
+        <p class="page-description">
+            アプリケーションの利用状況と売上統計を確認できます
+        </p>
+    </div>
+
+    <!-- Overview Cards -->
+    <div class="stats-grid">
+        <div class="stat-card">
+            <div class="stat-icon">
+                <span class="material-icons">people</span>
+            </div>
+            <div class="stat-content">
+                <h3 class="stat-value">{{ total_users }}</h3>
+                <p class="stat-label">登録ユーザー数</p>
+            </div>
+        </div>
+
+        <div class="stat-card">
+            <div class="stat-icon">
+                <span class="material-icons">shopping_cart</span>
+            </div>
+            <div class="stat-content">
+                <h3 class="stat-value">{{ total_reservations }}</h3>
+                <p class="stat-label">総予約数</p>
+            </div>
+        </div>
+
+        <div class="stat-card">
+            <div class="stat-icon">
+                <span class="material-icons">restaurant_menu</span>
+            </div>
+            <div class="stat-content">
+                <h3 class="stat-value">{{ total_products }}</h3>
+                <p class="stat-label">商品数</p>
+            </div>
+        </div>
+
+        <div class="stat-card">
+            <div class="stat-icon">
+                <span class="material-icons">payments</span>
+            </div>
+            <div class="stat-content">
+                <h3 class="stat-value">¥{{ "{:,}".format(total_sales) }}</h3>
+                <p class="stat-label">総売上</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Today's Stats -->
+    <div class="stats-section">
+        <h2 class="section-title">
+            <span class="material-icons">schedule</span>
+            今日の統計
+        </h2>
+        <div class="today-stats">
+            <div class="today-stat">
+                <span class="stat-number">{{ today_reservations }}</span>
+                <span class="stat-text">予約数</span>
+            </div>
+            <div class="today-stat">
+                <span class="stat-number">¥{{ "{:,}".format(today_sales) }}</span>
+                <span class="stat-text">売上</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Popular Products -->
+    <div class="stats-section">
+        <h2 class="section-title">
+            <span class="material-icons">star</span>
+            人気商品トップ5
+        </h2>
+        <div class="popular-products">
+            {% for product in popular_products %}
+            <div class="product-stat">
+                <div class="product-info">
+                    <img src="{{ url_for('static', filename=product.product_image) }}" 
+                         alt="{{ product.productname }}" 
+                         class="product-image">
+                    <div class="product-details">
+                        <h4 class="product-name">{{ product.productname }}</h4>
+                        <p class="product-price">¥{{ product.price }}</p>
+                    </div>
+                </div>
+                <div class="product-stats">
+                    <span class="sales-count">{{ product.buy_cnt }}回</span>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- Reservation Status Stats -->
+    <div class="stats-section">
+        <h2 class="section-title">
+            <span class="material-icons">pie_chart</span>
+            予約状態の統計
+        </h2>
+        <div class="status-stats">
+            {% for status, count in status_stats %}
+            <div class="status-stat">
+                <div class="status-info">
+                    <span class="status-name">{{ status }}</span>
+                    <span class="status-count">{{ count }}件</span>
+                </div>
+                <div class="status-bar">
+                    <div class="status-progress" style="width: {{ (count / total_reservations * 100) if total_reservations > 0 else 0 }}%"></div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- Monthly Stats -->
+    <div class="stats-section">
+        <h2 class="section-title">
+            <span class="material-icons">calendar_month</span>
+            今月の統計
+        </h2>
+        <div class="monthly-stats">
+            <div class="monthly-stat">
+                <span class="stat-number">{{ month_reservations }}</span>
+                <span class="stat-text">予約数</span>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.statistics-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: var(--spacing-lg);
+}
+
+.page-header {
+    text-align: center;
+    margin-bottom: var(--spacing-xl);
+}
+
+.page-title {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--spacing-sm);
+    font-size: 2.5rem;
+    font-weight: 700;
+    color: var(--md-sys-color-on-surface);
+    margin-bottom: var(--spacing-md);
+}
+
+.page-description {
+    font-size: 1.1rem;
+    color: var(--md-sys-color-on-surface-variant);
+    max-width: 600px;
+    margin: 0 auto;
+}
+
+/* Stats Grid */
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: var(--spacing-lg);
+    margin-bottom: var(--spacing-xl);
+}
+
+.stat-card {
+    background: var(--md-sys-color-surface-container);
+    border-radius: var(--border-radius-lg);
+    border: 1px solid var(--md-sys-color-outline);
+    padding: var(--spacing-lg);
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-md);
+    transition: all var(--transition-fast);
+}
+
+.stat-card:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
+}
+
+.stat-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 60px;
+    height: 60px;
+    border-radius: var(--border-radius-lg);
+    background: var(--md-sys-color-primary-container);
+    color: var(--md-sys-color-on-primary-container);
+}
+
+.stat-icon .material-icons {
+    font-size: 2rem;
+}
+
+.stat-content {
+    flex: 1;
+}
+
+.stat-value {
+    font-size: 2rem;
+    font-weight: 700;
+    color: var(--md-sys-color-on-surface);
+    margin: 0 0 var(--spacing-xs) 0;
+}
+
+.stat-label {
+    color: var(--md-sys-color-on-surface-variant);
+    font-size: 0.9rem;
+    margin: 0;
+}
+
+/* Stats Sections */
+.stats-section {
+    background: var(--md-sys-color-surface-container);
+    border-radius: var(--border-radius-lg);
+    border: 1px solid var(--md-sys-color-outline);
+    padding: var(--spacing-lg);
+    margin-bottom: var(--spacing-lg);
+}
+
+.section-title {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: var(--md-sys-color-on-surface);
+    margin: 0 0 var(--spacing-lg) 0;
+}
+
+.section-title .material-icons {
+    color: var(--md-sys-color-primary);
+}
+
+/* Today's Stats */
+.today-stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: var(--spacing-lg);
+}
+
+.today-stat {
+    text-align: center;
+    padding: var(--spacing-lg);
+    background: var(--md-sys-color-surface-container-high);
+    border-radius: var(--border-radius-lg);
+}
+
+.stat-number {
+    display: block;
+    font-size: 2rem;
+    font-weight: 700;
+    color: var(--md-sys-color-primary);
+    margin-bottom: var(--spacing-xs);
+}
+
+.stat-text {
+    color: var(--md-sys-color-on-surface-variant);
+    font-size: 0.9rem;
+}
+
+/* Popular Products */
+.popular-products {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-md);
+}
+
+.product-stat {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: var(--spacing-md);
+    background: var(--md-sys-color-surface-container-high);
+    border-radius: var(--border-radius-lg);
+}
+
+.product-info {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-md);
+}
+
+.product-image {
+    width: 50px;
+    height: 50px;
+    border-radius: var(--border-radius-sm);
+    object-fit: cover;
+}
+
+.product-details {
+    flex: 1;
+}
+
+.product-name {
+    font-weight: 600;
+    color: var(--md-sys-color-on-surface);
+    margin: 0 0 var(--spacing-xs) 0;
+}
+
+.product-price {
+    color: var(--md-sys-color-primary);
+    font-weight: 600;
+    margin: 0;
+}
+
+.sales-count {
+    background: var(--md-sys-color-primary-container);
+    color: var(--md-sys-color-on-primary-container);
+    padding: var(--spacing-xs) var(--spacing-sm);
+    border-radius: var(--border-radius-sm);
+    font-weight: 600;
+    font-size: 0.9rem;
+}
+
+/* Status Stats */
+.status-stats {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-md);
+}
+
+.status-stat {
+    padding: var(--spacing-md);
+    background: var(--md-sys-color-surface-container-high);
+    border-radius: var(--border-radius-lg);
+}
+
+.status-info {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: var(--spacing-sm);
+}
+
+.status-name {
+    font-weight: 600;
+    color: var(--md-sys-color-on-surface);
+}
+
+.status-count {
+    color: var(--md-sys-color-on-surface-variant);
+    font-size: 0.9rem;
+}
+
+.status-bar {
+    height: 8px;
+    background: var(--md-sys-color-surface-variant);
+    border-radius: var(--border-radius-sm);
+    overflow: hidden;
+}
+
+.status-progress {
+    height: 100%;
+    background: var(--md-sys-color-primary);
+    border-radius: var(--border-radius-sm);
+    transition: width var(--transition-normal);
+}
+
+/* Monthly Stats */
+.monthly-stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: var(--spacing-lg);
+}
+
+.monthly-stat {
+    text-align: center;
+    padding: var(--spacing-lg);
+    background: var(--md-sys-color-surface-container-high);
+    border-radius: var(--border-radius-lg);
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .statistics-container {
+        padding: var(--spacing-md);
+    }
+    
+    .page-title {
+        font-size: 2rem;
+    }
+    
+    .stats-grid {
+        grid-template-columns: 1fr;
+        gap: var(--spacing-md);
+    }
+    
+    .today-stats {
+        grid-template-columns: 1fr;
+    }
+    
+    .product-stat {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: var(--spacing-sm);
+    }
+    
+    .product-info {
+        width: 100%;
+    }
+    
+    .sales-count {
+        align-self: flex-end;
+    }
+}
+
+@media (max-width: 480px) {
+    .page-title {
+        font-size: 1.5rem;
+    }
+    
+    .stat-value {
+        font-size: 1.5rem;
+    }
+    
+    .stat-number {
+        font-size: 1.5rem;
+    }
+}
+</style>
+{% endblock %} 

@@ -1,44 +1,531 @@
 {% extends "layout.html" %}
 
 {% block content %}
-<div class="reserved_menu">
-    <h1 style="text-align: left;">最新の予約した商品</h1>
+<div class="reserved-history-container">
+    <!-- ヘッダーセクション -->
+    <div class="page-header">
+        <h1 class="page-title">
+            <span class="material-icons">history</span>
+            予約履歴
+        </h1>
+        <p class="page-subtitle">過去の予約と注文状況を確認できます</p>
+    </div>
+
+    <!-- 予約一覧 -->
+    <div class="reserved-list">
+        {% if reserved %}
+            {% for reserved_item in reserved %}
+            <md-elevated-card class="reserved-card" onclick="window.location.href='/my_reserved_list/detail/{{ reserved_item.id }}'">
+                <div class="card-header">
+                    <div class="order-info">
+                        <div class="order-id">
+                            <span class="material-icons">receipt</span>
+                            予約 #{{ reserved_item.id }}
+                        </div>
+                        <div class="order-status status-{{ reserved_item.state|lower }}">
+                            <span class="status-icon material-icons">
+                                {% if reserved_item.state == '準備中' %}
+                                    hourglass_empty
+                                {% elif reserved_item.state == '準備完了' %}
+                                    check_circle
+                                {% elif reserved_item.state == 'キャンセル' %}
+                                    cancel
+                                {% else %}
+                                    schedule
+                                {% endif %}
+                            </span>
+                            {{ reserved_item.state }}
+                        </div>
+                    </div>
+                    <div class="order-date">
+                        <span class="material-icons">event</span>
+                        {{ reserved_item.reserve_day }}
+                        <span class="material-icons">schedule</span>
+                        {{ reserved_item.reserve_time }}
+                    </div>
+                </div>
+
+                <div class="card-content">
+                    <div class="order-items">
+                        <h3 class="items-title">
+                            <span class="material-icons">shopping_basket</span>
+                            注文商品
+                        </h3>
+                        <div class="items-grid">
+                            {% if reserved_item.menu_item_0.productname %}
+                            <div class="item-chip">
+                                <span class="material-icons">restaurant</span>
+                                {{ reserved_item.menu_item_0.productname }}
+                            </div>
+                            {% endif %}
+                            {% if reserved_item.menu_item_1.productname %}
+                            <div class="item-chip">
+                                <span class="material-icons">restaurant</span>
+                                {{ reserved_item.menu_item_1.productname }}
+                            </div>
+                            {% endif %}
+                            {% if reserved_item.menu_item_2.productname %}
+                            <div class="item-chip">
+                                <span class="material-icons">restaurant</span>
+                                {{ reserved_item.menu_item_2.productname }}
+                            </div>
+                            {% endif %}
+                            {% if reserved_item.menu_item_3.productname %}
+                            <div class="item-chip">
+                                <span class="material-icons">restaurant</span>
+                                {{ reserved_item.menu_item_3.productname }}
+                            </div>
+                            {% endif %}
+                            {% if reserved_item.menu_item_4.productname %}
+                            <div class="item-chip">
+                                <span class="material-icons">restaurant</span>
+                                {{ reserved_item.menu_item_4.productname }}
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <div class="order-summary">
+                        <div class="total-price">
+                            <span class="material-icons">payments</span>
+                            <span class="price-amount">¥{{ reserved_item.price }}</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card-actions">
+                    <md-filled-button class="action-btn detail-btn" href="/my_reserved_list/detail/{{ reserved_item.id }}">
+                        <span slot="icon" class="material-icons">visibility</span>
+                        詳細を見る
+                    </md-filled-button>
+                    {% if reserved_item.state != 'キャンセル' %}
+                    <md-filled-button class="action-btn cancel-btn" href="/cancel_reserve/{{ reserved_item.id }}">
+                        <span slot="icon" class="material-icons">cancel</span>
+                        キャンセル
+                    </md-filled-button>
+                    {% endif %}
+                </div>
+            </md-elevated-card>
+            {% endfor %}
+        {% else %}
+            <!-- 予約がない場合の表示 -->
+            <md-elevated-card class="empty-state-card">
+                <div class="empty-state">
+                    <span class="material-icons empty-icon">receipt_long</span>
+                    <h2 class="empty-title">予約履歴がありません</h2>
+                    <p class="empty-description">
+                        まだ予約をしていないか、予約履歴が表示されていません。<br>
+                        商品を予約すると、ここに履歴が表示されます。
+                    </p>
+                    <md-filled-button class="primary-btn" href="/menu">
+                        <span slot="icon" class="material-icons">restaurant_menu</span>
+                        商品を見る
+                    </md-filled-button>
+                </div>
+            </md-elevated-card>
+        {% endif %}
+    </div>
 </div>
-<table class="table table-hover">
-    <thead>
-    <tr>
-        <th>予約ID</th>
-        <th>予約品１</th>
-        <th>予約品２</th>
-        <th>予約品３</th>
-        <th>予約品４</th>
-        <th>予約品５</th>
-        <th>予約日</th>
-        <th>予約時間</th>
-        <th>合計金額</th>
-        <th>注文の状態</th>
-        <th>詳細 / キャンセル</th>
-    </tr>
-    </thead>
-    <tbody>
-        {% for reserved in reserved %}
-        <tr href="/my_reserved_list/detail/{{ reserved.id }}">
-        <td>{{ reserved.id }}</td>
-        <td>{{ reserved.menu_item_0.productname }}</td>
-        <td>{{ reserved.menu_item_1.productname }}</td>
-        <td>{{ reserved.menu_item_2.productname }}</td>
-        <td>{{ reserved.menu_item_3.productname }}</td>
-        <td>{{ reserved.menu_item_4.productname }}</td>
-        <td>{{ reserved.reserve_day }}</td>
-        <td>{{ reserved.reserve_time }}</td>
-        <td>{{ reserved.price }}</td>
-        <td>{{ reserved.state }}</td>
-        <td><md-filled-button class="btn-detail" href="/my_reserved_list/detail/{{ reserved.id }}">詳細</md-filled-button>
-        <md-filled-button class="btn-cancel" href="/cancel_reserve/{{ reserved.id }}">キャンセル</md-filled-button></td>
-        </tr>
-        {% endfor %}
-    </tbody>
-</table>
 
+<style>
+/* コンテナスタイル */
+.reserved-history-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 16px;
+    min-height: calc(100vh - 120px);
+}
 
+/* ページヘッダー */
+.page-header {
+    text-align: center;
+    margin-bottom: 32px;
+    padding: 24px 0;
+}
+
+.page-title {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    font-size: 2rem;
+    font-weight: 700;
+    color: var(--md-sys-color-on-surface);
+    margin-bottom: 8px;
+}
+
+.page-title .material-icons {
+    font-size: 2.5rem;
+    color: var(--md-sys-color-primary);
+}
+
+.page-subtitle {
+    font-size: 1rem;
+    color: var(--md-sys-color-on-surface-variant);
+    margin: 0;
+}
+
+/* 予約リスト */
+.reserved-list {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+/* 予約カード */
+.reserved-card {
+    border-radius: 16px;
+    padding: 20px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    background: var(--md-sys-color-surface);
+    border: 1px solid var(--md-sys-color-outline-variant);
+}
+
+.reserved-card:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--md-sys-elevation-level4);
+}
+
+/* カードヘッダー */
+.card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 16px;
+    flex-wrap: wrap;
+    gap: 12px;
+}
+
+.order-info {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.order-id {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 1.125rem;
+    font-weight: 600;
+    color: var(--md-sys-color-on-surface);
+}
+
+.order-id .material-icons {
+    font-size: 1.25rem;
+    color: var(--md-sys-color-primary);
+}
+
+.order-status {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 0.875rem;
+    font-weight: 500;
+    width: fit-content;
+}
+
+.status-preparing {
+    background: var(--md-sys-color-tertiary-container);
+    color: var(--md-sys-color-on-tertiary-container);
+}
+
+.status-準備完了 {
+    background: var(--md-sys-color-primary-container);
+    color: var(--md-sys-color-on-primary-container);
+}
+
+.status-キャンセル {
+    background: var(--md-sys-color-error-container);
+    color: var(--md-sys-color-on-error-container);
+}
+
+.status-準備中 {
+    background: var(--md-sys-color-tertiary-container);
+    color: var(--md-sys-color-on-tertiary-container);
+}
+
+.status-icon {
+    font-size: 1rem;
+}
+
+.order-date {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.875rem;
+    color: var(--md-sys-color-on-surface-variant);
+}
+
+.order-date .material-icons {
+    font-size: 1rem;
+}
+
+/* カードコンテンツ */
+.card-content {
+    margin-bottom: 16px;
+}
+
+.order-items {
+    margin-bottom: 16px;
+}
+
+.items-title {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--md-sys-color-on-surface);
+    margin-bottom: 12px;
+}
+
+.items-title .material-icons {
+    font-size: 1.125rem;
+    color: var(--md-sys-color-primary);
+}
+
+.items-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.item-chip {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 12px;
+    background: var(--md-sys-color-secondary-container);
+    color: var(--md-sys-color-on-secondary-container);
+    border-radius: 16px;
+    font-size: 0.875rem;
+    font-weight: 500;
+}
+
+.item-chip .material-icons {
+    font-size: 1rem;
+}
+
+.order-summary {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+}
+
+.total-price {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: var(--md-sys-color-primary);
+}
+
+.total-price .material-icons {
+    font-size: 1.5rem;
+}
+
+.price-amount {
+    font-size: 1.5rem;
+}
+
+/* カードアクション */
+.card-actions {
+    display: flex;
+    gap: 12px;
+    justify-content: flex-end;
+    flex-wrap: wrap;
+}
+
+.action-btn {
+    --md-comp-filled-button-container-color: var(--md-sys-color-primary);
+    --md-comp-filled-button-label-text-color: var(--md-sys-color-on-primary);
+    --md-comp-filled-button-icon-color: var(--md-sys-color-on-primary);
+    border-radius: 20px;
+    font-weight: 500;
+}
+
+.cancel-btn {
+    --md-comp-filled-button-container-color: var(--md-sys-color-error);
+    --md-comp-filled-button-label-text-color: var(--md-sys-color-on-error);
+    --md-comp-filled-button-icon-color: var(--md-sys-color-on-error);
+}
+
+/* 空の状態 */
+.empty-state-card {
+    text-align: center;
+    padding: 48px 24px;
+    border-radius: 16px;
+}
+
+.empty-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 16px;
+}
+
+.empty-icon {
+    font-size: 4rem;
+    color: var(--md-sys-color-outline);
+    margin-bottom: 16px;
+}
+
+.empty-title {
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: var(--md-sys-color-on-surface);
+    margin: 0;
+}
+
+.empty-description {
+    font-size: 1rem;
+    color: var(--md-sys-color-on-surface-variant);
+    line-height: 1.5;
+    margin: 0;
+    max-width: 400px;
+}
+
+.primary-btn {
+    --md-comp-filled-button-container-color: var(--md-sys-color-primary);
+    --md-comp-filled-button-label-text-color: var(--md-sys-color-on-primary);
+    --md-comp-filled-button-icon-color: var(--md-sys-color-on-primary);
+    border-radius: 20px;
+    font-weight: 500;
+    margin-top: 16px;
+}
+
+/* レスポンシブデザイン */
+@media (max-width: 768px) {
+    .reserved-history-container {
+        padding: 12px;
+    }
+
+    .page-title {
+        font-size: 1.75rem;
+    }
+
+    .page-title .material-icons {
+        font-size: 2rem;
+    }
+
+    .card-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 8px;
+    }
+
+    .order-date {
+        font-size: 0.8rem;
+    }
+
+    .items-grid {
+        gap: 6px;
+    }
+
+    .item-chip {
+        font-size: 0.8rem;
+        padding: 4px 10px;
+    }
+
+    .card-actions {
+        justify-content: stretch;
+    }
+
+    .action-btn {
+        flex: 1;
+        min-width: 120px;
+    }
+
+    .total-price {
+        font-size: 1.125rem;
+    }
+
+    .price-amount {
+        font-size: 1.25rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .page-title {
+        font-size: 1.5rem;
+        flex-direction: column;
+        gap: 8px;
+    }
+
+    .page-title .material-icons {
+        font-size: 1.75rem;
+    }
+
+    .reserved-card {
+        padding: 16px;
+    }
+
+    .card-actions {
+        flex-direction: column;
+    }
+
+    .action-btn {
+        width: 100%;
+    }
+
+    .empty-state-card {
+        padding: 32px 16px;
+    }
+
+    .empty-icon {
+        font-size: 3rem;
+    }
+
+    .empty-title {
+        font-size: 1.25rem;
+    }
+
+    .empty-description {
+        font-size: 0.9rem;
+    }
+}
+
+/* アニメーション */
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.reserved-card {
+    animation: fadeInUp 0.5s ease-out;
+}
+
+.reserved-card:nth-child(1) { animation-delay: 0.1s; }
+.reserved-card:nth-child(2) { animation-delay: 0.2s; }
+.reserved-card:nth-child(3) { animation-delay: 0.3s; }
+.reserved-card:nth-child(4) { animation-delay: 0.4s; }
+.reserved-card:nth-child(5) { animation-delay: 0.5s; }
+
+/* アクセシビリティ */
+@media (prefers-reduced-motion: reduce) {
+    .reserved-card {
+        animation: none;
+        transition: none;
+    }
+}
+
+/* ダークモード対応 */
+@media (prefers-color-scheme: dark) {
+    .reserved-card {
+        background: var(--md-sys-color-surface);
+        border-color: var(--md-sys-color-outline-variant);
+    }
+}
+</style>
 {% endblock %}

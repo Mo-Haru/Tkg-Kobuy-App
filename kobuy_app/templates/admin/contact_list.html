@@ -2,35 +2,219 @@
 
 {% block content %}
 
+<div class="contact-list-container">
+    <div class="page-header">
+        <h2>お問い合わせ一覧</h2>
+        <p class="page-description">
+            ユーザーからのお問い合わせを確認できます。
+        </p>
+    </div>
 
-<h1>お問い合わせ一覧</h1>
+    <div class="table-container">
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>名前</th>
+                    <th>タイトル</th>
+                    <th>日付</th>
+                    <th>時間</th>
+                    <th>操作</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for contact in contacts %}
+                <tr data-contact-id="{{ contact.id }}">
+                    <td>{{ contact.id }}</td>
+                    <td>{{ contact.user.lastname }}{{ contact.user.firstname }}</td>
+                    <td>
+                        <button class="contact-btn" onclick="showContactDetail({{ contact.id }})">
+                            {{ contact.title }}
+                        </button>
+                    </td>
+                    <td>{{ contact.contact_day }}</td>
+                    <td>{{ contact.contact_time }}</td>
+                    <td>
+                        <div class="action-buttons">
+                            <md-filled-tonal-button onclick="showContactDetail({{ contact.id }})" class="action-btn">
+                                <span slot="icon" class="material-icons">open_in_full</span>
+                                詳細
+                            </md-filled-tonal-button>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
 
-<table class="table">
-  <thead>
-    <tr style="background-color: var(--md-sys-color-secondary-container); font-size: medium;">
-      <th style="border-radius: 20px 0 0 0;">Id</th>
-      <th>名前</th>
-      <th>タイトル</th>
-      <th>日付</th>
-      <th>時間</th>
-      <th style="border-radius: 0 20px 0 0;">詳細</th>
-    </tr>
-  </thead>
-    <tbody>
-      {% for contact in contacts %}
-        <tr>
-          <td>{{ contact.id }}</td>
-          <td>{{ contact.user.lastname }}{{ contact.user.firstname }}</td>
-          <td>{{ contact.title }}</td>
-          <td>{{ contact.contact_day }}</td>
-          <td>{{ contact.contact_time }}</td>
-          <td>
-              <md-filled-button class="" href="/admin/contact_list/detail/{{ contact.id }}">詳細</md-filled-button>
-          </td>
-        </tr>
-      {% endfor %}
-    </tbody>
-  </table>
+<style>
+.contact-list-container {
+    padding: var(--spacing-lg);
+}
 
+.page-header {
+    margin-bottom: var(--spacing-xl);
+}
+
+.page-header h2 {
+    font-size: 28px;
+    font-weight: 600;
+    color: var(--md-sys-color-on-surface);
+    margin-bottom: var(--spacing-sm);
+}
+
+.page-description {
+    color: var(--md-sys-color-on-surface-variant);
+    margin-bottom: var(--spacing-lg);
+}
+
+.table-container {
+    background: var(--md-sys-color-surface-container);
+    border-radius: var(--border-radius-lg);
+    overflow: hidden;
+    box-shadow: var(--shadow-sm);
+}
+
+.contact-btn {
+    background: none;
+    border: none;
+    color: var(--md-sys-color-primary);
+    text-decoration: underline;
+    cursor: pointer;
+    padding: 0;
+    font-size: inherit;
+    font-family: inherit;
+}
+
+.contact-btn:hover {
+    color: var(--md-sys-color-primary-fixed-dim);
+}
+
+.action-buttons {
+    display: flex;
+    gap: var(--spacing-xs);
+    flex-wrap: wrap;
+}
+
+.action-btn {
+    font-size: 12px;
+    height: 32px;
+    padding: 0 var(--spacing-sm);
+}
+
+@media (max-width: 768px) {
+    .contact-list-container {
+        padding: var(--spacing-md);
+    }
+    
+    .action-buttons {
+        flex-direction: column;
+    }
+    
+    .table {
+        font-size: 12px;
+    }
+    
+    .table th, .table td {
+        padding: var(--spacing-sm);
+    }
+}
+</style>
+
+<script>
+function showContactDetail(contactId) {
+    fetch(`/api/admin/contact/${contactId}`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                const modal = document.getElementById('contactDetailModal');
+                const content = modal.querySelector('.modal-body');
+                
+                content.innerHTML = `
+                    <div class="contact-detail">
+                        <div class="contact-header">
+                            <h3>お問い合わせ #${data.contact.id}</h3>
+                            <p><strong>送信者:</strong> ${data.user.lastname} ${data.user.firstname}</p>
+                            <p><strong>メール:</strong> ${data.user.email}</p>
+                            <p><strong>送信日時:</strong> ${data.contact.date} ${data.contact.time}</p>
+                        </div>
+                        
+                        <div class="contact-content">
+                            <h4>タイトル</h4>
+                            <p class="contact-title">${data.contact.title}</p>
+                            
+                            <h4>内容</h4>
+                            <div class="contact-body">
+                                ${data.contact.content.replace(/\n/g, '<br>')}
+                            </div>
+                        </div>
+                    </div>
+                `;
+                
+                modalManager.show('contactDetailModal');
+            } else {
+                showToast('お問い合わせ情報の取得に失敗しました', 'error');
+            }
+        })
+        .catch(error => {
+            console.error('Error fetching contact details:', error);
+            showToast('お問い合わせ情報の取得に失敗しました', 'error');
+        });
+}
+</script>
+
+<style>
+.contact-detail {
+    max-width: 600px;
+}
+
+.contact-header {
+    background: var(--md-sys-color-primary-container);
+    color: var(--md-sys-color-on-primary-container);
+    padding: var(--spacing-lg);
+    border-radius: var(--border-radius-lg) var(--border-radius-lg) 0 0;
+    margin: calc(-1 * var(--spacing-lg)) calc(-1 * var(--spacing-lg)) var(--spacing-lg) calc(-1 * var(--spacing-lg));
+}
+
+.contact-header h3 {
+    margin: 0 0 var(--spacing-sm) 0;
+    font-size: 20px;
+    font-weight: 600;
+}
+
+.contact-header p {
+    margin: var(--spacing-xs) 0;
+    font-size: 14px;
+}
+
+.contact-content {
+    padding: 0;
+}
+
+.contact-content h4 {
+    color: var(--md-sys-color-on-surface);
+    font-size: 16px;
+    font-weight: 600;
+    margin: var(--spacing-md) 0 var(--spacing-sm) 0;
+}
+
+.contact-title {
+    background: var(--md-sys-color-surface-container-low);
+    padding: var(--spacing-md);
+    border-radius: var(--border-radius-md);
+    font-weight: 500;
+    margin-bottom: var(--spacing-lg);
+}
+
+.contact-body {
+    background: var(--md-sys-color-surface-container-low);
+    padding: var(--spacing-lg);
+    border-radius: var(--border-radius-md);
+    line-height: 1.6;
+    white-space: pre-line;
+}
+</style>
 
 {% endblock content %}

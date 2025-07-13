@@ -1,194 +1,689 @@
 {% extends "layout.html" %}
+
 {% block header %}
-    <span class="r_h_title">
-        / 予約
+<span class="page-title">
+    <span class="material-icons">shopping_cart</span>
+    予約
     </span>
 {% endblock %}
 
-{% block header_r %}
-{% endblock %}
 {% block content %}
-<div class="reserve_main">
-    <div class="reserve_L">
-        <div class="reserve_form">
-        <form class="r_form" id="reserveForm" method="POST" action="" onSubmit="return check()">
-            <label for="reserve_item_0"></label>
-            <label for="reserve_item_1"></label>
-            <label for="reserve_item_2"></label>
-            <label for="reserve_item_3"></label>
-            <label for="reserve_item_4"></label>
+<div class="reserve-container fade-in">
+    <!-- Header Section -->
+    <section class="reserve-header">
+        <div class="header-content">
+            <h1 class="page-heading">商品予約</h1>
+            <p class="page-description">
+                お気に入りの商品を選択して、簡単に予約できます。最大5個まで予約可能です。
+            </p>
+        </div>
+        
+        <!-- Sale Status -->
+        <div class="sale-status-card">
+            {% if sale_state.state == 1 %}
+                <div class="status-indicator active">
+                    <span class="material-icons">store</span>
+                    <span>販売中</span>
+                </div>
+            {% else %}
+                <div class="status-indicator inactive">
+                    <span class="material-icons">store_off</span>
+                    <span>販売停止中</span>
+                </div>
+            {% endif %}
+        </div>
+    </section>
 
+    <!-- Main Content -->
+    <div class="reserve-content">
+        <!-- Product Selection -->
+        <section class="product-section">
+            <div class="section-header">
+                <h2 class="section-title">
+                    <span class="material-icons">inventory</span>
+                    商品選択
+                </h2>
+                <div class="selection-info">
+                    <span class="selected-count">0</span> / 5 個選択中
+                </div>
+            </div>
+            
+            <form class="reserve-form" id="reserveForm" method="POST" action="">
             <input type="hidden" name="reserve_item_0" id="reserve_item_0" value="None">
             <input type="hidden" name="reserve_item_1" id="reserve_item_1" value="None">
             <input type="hidden" name="reserve_item_2" id="reserve_item_2" value="None">
             <input type="hidden" name="reserve_item_3" id="reserve_item_3" value="None">
             <input type="hidden" name="reserve_item_4" id="reserve_item_4" value="None">
 
-            <div class="r_cards">
+                <div class="product-grid">
                 {% for menu_item in menu_items %}
                 {% for menu_stock in menu_stock %}
                 {% if menu_item.id == menu_stock.id %}
-                <div class="r_i_card" data-id="{{ menu_item.id }}" data-category="{{ menu_item.category_id }}">
-                    <div class="r_i_img">
+                    <div class="product-card" data-id="{{ menu_item.id }}" data-category="{{ menu_item.category_id }}">
+                        <!-- Product Image -->
+                        <div class="product-image">
                         {% if menu_item.product_image %}
-                        <a href="/menu/{{ menu_item.id }}">
-                        <img src="{{ url_for('static', filename=menu_item.product_image) }}" alt="{{ menu_item.productname }}の画像" width="100%" height="100%">
-                        </a>
+                                <img src="{{ url_for('static', filename=menu_item.product_image) }}" 
+                                     alt="{{ menu_item.productname }}" 
+                                     class="product-img">
+                            {% else %}
+                                <div class="no-image">
+                                    <span class="material-icons">restaurant</span>
+                                </div>
+                            {% endif %}
+                            
+                            <!-- Stock Badge -->
+                            {% if menu_stock.today_stock > 0 %}
+                                <div class="stock-badge available">
+                                    <span class="material-icons">inventory</span>
+                                    {{ menu_stock.today_stock }}個
+                                </div>
                         {% else %}
-                        {{ menu_item.productname }}の商品画像が存在しないか、読み込むことができませんでした。
+                                <div class="stock-badge unavailable">
+                                    <span class="material-icons">inventory_2</span>
+                                    売り切れ
+                                </div>
                         {% endif %}
                     </div>
-                    <div class="r_i_text">
-                        <span class="r_i_name">{{ menu_item.productname }}</span>
-                        <span class="r_i_price" id="r_i_price_{{ menu_item.id }}">{{ menu_item.price }}円</span>
-                        <p>在庫：{{ menu_stock.today_stock }}</p>
-                        <md-text-button id="product_detail_{{ menu_item.id }}" type="button" data-id="{{ menu_item.id }}">商品の詳細</md-text-button>
+
+                        <!-- Product Info -->
+                        <div class="product-info">
+                            <h3 class="product-name">{{ menu_item.productname }}</h3>
+                            <div class="product-price" id="r_i_price_{{ menu_item.id }}">{{ menu_item.price }}円</div>
+                            <div class="product-stock">
+                                在庫: {{ menu_stock.today_stock }}個
+                            </div>
                     </div>
-                    <div class="r_i_counter">
-                        <md-filled-tonal-icon-button id="r_i_decrement_{{ menu_item.id }}" type="button">
+
+                        <!-- Quantity Controls -->
+                        <div class="quantity-controls">
+                            <md-filled-tonal-icon-button 
+                                id="r_i_decrement_{{ menu_item.id }}" 
+                                type="button"
+                                {% if menu_stock.today_stock <= 0 %}disabled{% endif %}>
                             <span class="material-icons">remove</span>
                         </md-filled-tonal-icon-button>
-                        <label id="r_i_cnt_{{ menu_item.id }}" for="r_i_cnt_{{ menu_item.id }}">0</label>
+                            
+                            <div class="quantity-display">
+                                <span id="r_i_cnt_{{ menu_item.id }}">0</span>
                         <input type="hidden" name="r_i_cnt_{{ menu_item.id }}">
-                        <md-filled-tonal-icon-button id="r_i_increment_{{ menu_item.id }}" type="button">
+                            </div>
+                            
+                            <md-filled-tonal-icon-button 
+                                id="r_i_increment_{{ menu_item.id }}" 
+                                type="button"
+                                {% if menu_stock.today_stock <= 0 %}disabled{% endif %}>
                             <span class="material-icons">add</span>
                         </md-filled-tonal-icon-button>
-                    </div>
+                        </div>
+
+                        <!-- Action Buttons -->
+                        <div class="product-actions">
+                            <md-outlined-button 
+                                id="product_detail_{{ menu_item.id }}" 
+                                type="button" 
+                                data-id="{{ menu_item.id }}"
+                                class="detail-btn">
+                                <span slot="icon" class="material-icons">visibility</span>
+                                詳細
+                            </md-outlined-button>
+                        </div>
                 </div>
                 {% endif %}
                 {% endfor %}
                 {% endfor %}
             </div>
         </form>
+        </section>
+
+        <!-- Order Summary -->
+        <section class="order-summary">
+            <div class="summary-header">
+                <h2 class="section-title">
+                    <span class="material-icons">receipt</span>
+                    注文サマリー
+                </h2>
+            </div>
+            
+            <div class="summary-content">
+                <!-- Selected Items -->
+                <div class="selected-items" id="selectedItems">
+                    <div class="empty-selection">
+                        <span class="material-icons">shopping_cart</span>
+                        <p>商品を選択してください</p>
+                    </div>
+                </div>
+                
+                <!-- Total -->
+                <div class="total-section">
+                    <div class="total-row">
+                        <span>合計金額</span>
+                        <span class="total-price">
+                            <span id="total_price">0</span>円
+                        </span>
         </div>
     </div>
-    <div class="reserve_R">
-        <div class="sale_state">
-            {% if sale_state.state == 1 %}
-            <h3>販売中です</h3>
-            {% else %}
-            <h3 class="sale_status sale_inactive">販売停止中です</h3>
+                
+                <!-- Reserve Button -->
+                <div class="reserve-actions">
+                    <div class="action-buttons">
+                        <md-filled-button 
+                            type="button" 
+                            id="reserve_button" 
+                            class="reserve-btn"
+                            {% if sale_state.state != 1 %}disabled{% endif %}>
+                            <span slot="icon" class="material-icons">check</span>
+                            予約する
+                        </md-filled-button>
+                        
+                        <md-outlined-button 
+                            type="button" 
+                            id="reset_button" 
+                            class="reset-btn">
+                            <span slot="icon" class="material-icons">refresh</span>
+                            リセット
+                        </md-outlined-button>
+                    </div>
+                    
+                    {% if sale_state.state != 1 %}
+                        <p class="reserve-disabled">
+                            現在予約を受け付けていません
+                        </p>
             {% endif %}
         </div>
-        <!-- <md-divider></md-divider>
-        <div>
-            <h3>予約商品</h3>
-            <div>
-                <li id="reserve_item_0" class="hidden">None</li>
-                <li id="reserve_item_1" class="hidden">None</li>
-                <li id="reserve_item_2" class="hidden">None</li>
-                <li id="reserve_item_3" class="hidden">None</li>
-                <li id="reserve_item_4" class="hidden">None</li>
             </div>
-        </div> -->
-        <md-divider></md-divider>
-        <div style="margin-bottom: 5px; align-items: flex-end;">
-            <h3>合計金額<a id="total_price">0</a><a>円</a></h3>
-            <md-filled-button type="button" id="reserve_button" style="width: 100%;">
-                <span>予約する</span>
-                <span slot="icon" class="material-icons head_icon" viewBox="0 0 48 48">check</span>
-            </md-filled-button>
-        </div>
+        </section>
     </div>
 </div>
-<style>
-    .resreve_form {
-        scroll-behavior: smooth;
-        overflow: scroll;
-        display: flex;
 
+<style>
+/* Reserve Container */
+.reserve-container {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: var(--spacing-lg);
+}
+
+/* Header Section */
+.reserve-header {
+    margin-bottom: var(--spacing-xl);
+}
+
+.header-content {
+    text-align: center;
+    margin-bottom: var(--spacing-lg);
+}
+
+.page-heading {
+    font-size: 2.5rem;
+    font-weight: 700;
+    color: var(--md-sys-color-on-surface);
+    margin-bottom: var(--spacing-md);
+}
+
+.page-description {
+    font-size: 1.1rem;
+    color: var(--md-sys-color-on-surface-variant);
+    max-width: 600px;
+    margin: 0 auto;
+}
+
+/* Sale Status */
+.sale-status-card {
+    display: flex;
+    justify-content: center;
+    margin-bottom: var(--spacing-lg);
+}
+
+.status-indicator {
+        display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+    padding: var(--spacing-md) var(--spacing-lg);
+    border-radius: var(--border-radius-lg);
+    font-weight: 600;
+    font-size: 1.1rem;
+}
+
+.status-indicator.active {
+    background: var(--md-sys-color-primary-container);
+    color: var(--md-sys-color-on-primary-container);
+}
+
+.status-indicator.inactive {
+    background: var(--md-sys-color-error-container);
+    color: var(--md-sys-color-on-error-container);
+}
+
+/* Main Content */
+.reserve-content {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    gap: var(--spacing-xl);
+    align-items: start;
+}
+
+@media (max-width: 1024px) {
+    .reserve-content {
+        grid-template-columns: 1fr;
+        gap: var(--spacing-lg);
     }
-    .reserve_main {
+}
+
+/* Product Section */
+.product-section {
+    background: var(--md-sys-color-surface-container);
+    border-radius: var(--border-radius-lg);
+    border: 1px solid var(--md-sys-color-outline);
+    overflow: hidden;
+}
+
+.section-header {
         display: flex;
         justify-content: space-between;
-        align-items: flex-start;
-        width: 100%;
-        height: calc(100vh - 60px); /* ヘッダーの高さを考慮 */
+    align-items: center;
+    padding: var(--spacing-lg);
+    border-bottom: 1px solid var(--md-sys-color-outline);
+    background: var(--md-sys-color-surface-container-high);
+}
+
+.section-title {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: var(--md-sys-color-on-surface);
+    margin: 0;
+}
+
+.section-title .material-icons {
+    color: var(--md-sys-color-primary);
+}
+
+.selection-info {
+    color: var(--md-sys-color-on-surface-variant);
+    font-size: 0.9rem;
+}
+
+.selected-count {
+    color: var(--md-sys-color-primary);
+    font-weight: 600;
+}
+
+/* Product Grid */
+.product-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: var(--spacing-md);
+    padding: var(--spacing-lg);
+    max-height: 70vh;
+    overflow-y: auto;
+}
+
+/* Large screens (1200px and up) */
+@media (min-width: 1200px) {
+    .product-grid {
+        grid-template-columns: repeat(4, 1fr);
+        gap: var(--spacing-lg);
     }
-    .reserve_L {
-        width: auto;
-        overflow-y: auto;
-        height: calc(100%); /* ヘッダーとフッターの高さを考慮 */
+}
+
+/* Medium-large screens (992px to 1199px) */
+@media (min-width: 992px) and (max-width: 1199px) {
+    .product-grid {
+        grid-template-columns: repeat(3, 1fr);
+        gap: var(--spacing-md);
     }
-    .reserve_R {
-        right: 0;
-        width: 700px;
-        height: calc(100%); /* ヘッダーとフッターの高さを考慮 */
-        background-color: var(--md-sys-color-surface);
-        padding: 10px;
-        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-        display: flex;
-        flex-direction: column
+}
+
+/* Medium screens (768px to 991px) */
+@media (min-width: 768px) and (max-width: 991px) {
+    .product-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: var(--spacing-sm);
     }
-    .sale_state {
-        padding: 10px;
+}
+
+/* Product Card */
+.product-card {
+    background: var(--md-sys-color-surface-container-low);
+    border-radius: var(--border-radius-lg);
+    border: 1px solid var(--md-sys-color-outline);
+    overflow: hidden;
+    transition: all var(--transition-fast);
+}
+
+.product-card:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
+}
+
+.product-card.selected {
+    border-color: var(--md-sys-color-primary);
+    background: var(--md-sys-color-primary-container);
+}
+
+/* Product Image */
+.product-image {
+    position: relative;
+    height: 160px;
+    overflow: hidden;
+}
+
+.product-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.no-image {
+    width: 100%;
+    height: 100%;
+    background: var(--md-sys-color-surface-variant);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--md-sys-color-on-surface-variant);
+}
+
+.no-image .material-icons {
+    font-size: 2rem;
+}
+
+/* Stock Badge */
+.stock-badge {
+    position: absolute;
+    top: var(--spacing-sm);
+    right: var(--spacing-sm);
+    padding: var(--spacing-xs) var(--spacing-sm);
+    border-radius: var(--border-radius-md);
+    font-size: 0.8rem;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-xs);
+    backdrop-filter: blur(10px);
+}
+
+.stock-badge.available {
+    background: rgba(76, 175, 80, 0.9);
+    color: white;
+}
+
+.stock-badge.unavailable {
+    background: rgba(244, 67, 54, 0.9);
+    color: white;
+}
+
+/* Product Info */
+.product-info {
+    padding: var(--spacing-md);
+}
+
+.product-name {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: var(--md-sys-color-on-surface);
+    margin: 0 0 var(--spacing-xs) 0;
+}
+
+.product-price {
+    font-size: 1.2rem;
+    font-weight: 700;
+    color: var(--md-sys-color-primary);
+    margin-bottom: var(--spacing-xs);
+}
+
+.product-stock {
+    font-size: 0.9rem;
+    color: var(--md-sys-color-on-surface-variant);
+}
+
+/* Quantity Controls */
+.quantity-controls {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--spacing-sm);
+    padding: var(--spacing-sm) var(--spacing-md);
+    border-top: 1px solid var(--md-sys-color-outline);
+}
+
+.quantity-display {
+    min-width: 40px;
+    text-align: center;
+    font-weight: 600;
+    font-size: 1.1rem;
+    color: var(--md-sys-color-on-surface);
+}
+
+/* Product Actions */
+.product-actions {
+    padding: var(--spacing-sm) var(--spacing-md) var(--spacing-md);
+    display: flex;
+    justify-content: center;
+}
+
+.detail-btn {
+    width: 100%;
+}
+
+/* Order Summary */
+.order-summary {
+    background: var(--md-sys-color-surface-container);
+    border-radius: var(--border-radius-lg);
+    border: 1px solid var(--md-sys-color-outline);
+    overflow: hidden;
+    position: sticky;
+    top: var(--spacing-lg);
+}
+
+.summary-header {
+    padding: var(--spacing-lg);
+    border-bottom: 1px solid var(--md-sys-color-outline);
+    background: var(--md-sys-color-surface-container-high);
+}
+
+.summary-content {
+    padding: var(--spacing-lg);
+}
+
+/* Selected Items */
+.selected-items {
+    margin-bottom: var(--spacing-lg);
+    min-height: 200px;
+}
+
+.empty-selection {
+    text-align: center;
+    color: var(--md-sys-color-on-surface-variant);
+    padding: var(--spacing-xl);
+}
+
+.empty-selection .material-icons {
+    font-size: 3rem;
+    margin-bottom: var(--spacing-md);
+}
+
+.selected-item {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-md);
+    padding: var(--spacing-md);
+    border-radius: var(--border-radius-md);
+    background: var(--md-sys-color-surface-container-low);
+    margin-bottom: var(--spacing-sm);
+}
+
+.selected-item-image {
+    width: 50px;
+    height: 50px;
+    border-radius: var(--border-radius-sm);
+    object-fit: cover;
+}
+
+.selected-item-info {
+    flex: 1;
+}
+
+.selected-item-name {
+    font-weight: 600;
+    color: var(--md-sys-color-on-surface);
+    margin-bottom: var(--spacing-xs);
+}
+
+.selected-item-price {
+    color: var(--md-sys-color-primary);
+    font-weight: 600;
+}
+
+.selected-item-quantity {
+    color: var(--md-sys-color-on-surface-variant);
+    font-size: 0.9rem;
+}
+
+/* Total Section */
+.total-section {
+    border-top: 1px solid var(--md-sys-color-outline);
+    padding-top: var(--spacing-lg);
+    margin-bottom: var(--spacing-lg);
+}
+
+.total-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 1.2rem;
+    font-weight: 600;
+}
+
+.total-price {
+    color: var(--md-sys-color-primary);
+    font-size: 1.5rem;
+}
+
+/* Reserve Actions */
+.reserve-actions {
         text-align: center;
+}
+
+.action-buttons {
+    display: flex;
+    gap: var(--spacing-md);
+    justify-content: center;
+}
+
+.reserve-btn {
+    width: 100%;
+    height: 56px;
+    font-size: 1.1rem;
+    font-weight: 600;
+}
+
+.reset-btn {
         width: 100%;
+    height: 56px;
+    font-size: 1.1rem;
+    font-weight: 600;
+    border-color: var(--md-sys-color-outline);
+    color: var(--md-sys-color-on-surface);
+}
+
+.reserve-disabled {
+    margin-top: var(--spacing-md);
+    color: var(--md-sys-color-error);
+    font-size: 0.9rem;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .reserve-container {
+        padding: var(--spacing-md);
     }
-    .sale_status {
-        padding: 5px 10px;
-        border-radius: 5px;
+    
+    .page-heading {
+        font-size: 2rem;
     }
-    .sale_active {
-        color: #000000;
+    
+    .product-grid {
+        grid-template-columns: 1fr;
+        gap: var(--spacing-sm);
     }
-    .sale_inactive {
-        color: var(--md-sys-color-error);
+    
+    .product-card {
+        max-width: 400px;
+        margin: 0 auto;
     }
+    
+    .section-header {
+        flex-direction: column;
+        gap: var(--spacing-sm);
+        align-items: flex-start;
+    }
+}
+
+@media (max-width: 480px) {
+    .page-heading {
+        font-size: 1.5rem;
+    }
+    
+    .product-grid {
+        gap: var(--spacing-sm);
+    }
+    
+    .product-card {
+        max-width: 100%;
+    }
+    
+    .product-info {
+        padding: var(--spacing-sm);
+    }
+    
+    .product-name {
+        font-size: 16px;
+    }
+    
+    .product-price {
+        font-size: 18px;
+    }
+    
+    .quantity-controls {
+        padding: var(--spacing-xs) var(--spacing-sm);
+    }
+}
 </style>
-
-<!--強調表示-->
-<script>
-    document.addEventListener("DOMContentLoaded", () => {
-        // URLクエリパラメータを取得
-        const urlParams = new URLSearchParams(window.location.search);
-        const highlightId = urlParams.get('highlight');
-
-        if (highlightId) {
-            // 該当のカードを取得
-            const highlightCard = document.querySelector(`.r_i_card[data-id="${highlightId}"]`);
-            if (highlightCard) {
-                // 強調表示用のスタイルを適用
-                highlightCard.style.border = "3px solid #FF0000";
-                highlightCard.style.boxShadow = "0 0 15px rgba(255, 0, 0, 0.5)";
-
-                // 該当の商品カードにスクロール
-                highlightCard.scrollIntoView({ behavior: "smooth", block: "center" });
-            }
-        }
-    });
-</script>
-
-<!-- 予約ボタン -->
-<!-- <div class="fab_button">
-    <md-fab label="予約する" class="r-b" type="button" id="reserve_button">
-        <span class="material-icons mdicon-middle" slot="icon">check</span>
-    </md-fab>
-</div> -->
 
 <script>
     document.addEventListener("DOMContentLoaded", () => {
     const maxItems = 5;
     let reserveItem = JSON.parse(localStorage.getItem("reserveItem")) || {0: "None", 1: "None", 2: "None", 3: "None", 4: "None"};
     let totalPrice = 0;
+    let selectedCount = 0;
 
-    // 選択状態を復元する
+    // Initialize counters and restore state
     Object.values(reserveItem).forEach(id => {
         if (id !== "None") {
             const counterElement = document.getElementById(`r_i_cnt_${id}`);
             if (counterElement) {
                 let count = parseInt(counterElement.textContent) || 0;
                 counterElement.textContent = count + 1;
-                totalPrice += parseInt(document.getElementById(`r_i_price_${id}`).textContent.replace("円", ""));
+                const price = parseInt(document.getElementById(`r_i_price_${id}`).textContent.replace("円", ""));
+                totalPrice += price;
+                selectedCount++;
             }
         }
     });
+    
+    // Update form fields with restored state
+    updateReserveForm();
 
-    // 合計金額を更新
-    document.getElementById('total_price').textContent = totalPrice;
+    updateTotalPrice();
+    updateSelectedCount();
+    updateSelectedItems();
 
-    // 商品詳細ボタンをクリックした際の動作
-    document.querySelectorAll('.r_i_card').forEach((card) => {
+    // Product detail button functionality
+    document.querySelectorAll('.product-card').forEach((card) => {
         const id = card.dataset.id;
         const detailButton = document.getElementById(`product_detail_${id}`);
 
@@ -197,89 +692,195 @@
         });
     });
 
-    // 商品数の増減
-    document.querySelectorAll('.r_i_card').forEach((card) => {
+    // Quantity increment/decrement functionality
+    document.querySelectorAll('.product-card').forEach((card) => {
         const id = card.dataset.id;
+        const incrementBtn = document.getElementById(`r_i_increment_${id}`);
+        const decrementBtn = document.getElementById(`r_i_decrement_${id}`);
         const counterElement = document.getElementById(`r_i_cnt_${id}`);
-        const incrementButton = document.getElementById(`r_i_increment_${id}`);
-        const decrementButton = document.getElementById(`r_i_decrement_${id}`);
+        const priceElement = document.getElementById(`r_i_price_${id}`);
+        const price = parseInt(priceElement.textContent.replace("円", ""));
 
-        incrementButton.addEventListener('click', () => {
-            let selectedCount = Object.values(reserveItem).filter(item => item !== "None").length;
-            if (selectedCount >= maxItems) {
-                alert("選択できる商品は5つまでです。");
-                return;
-            }
-
+        incrementBtn.addEventListener('click', () => {
+            if (selectedCount < maxItems) {
             let count = parseInt(counterElement.textContent) || 0;
             count++;
             counterElement.textContent = count;
-
-            for (let i = 0; i < maxItems; i++) {
-                if (reserveItem[i] === "None") {
-                    reserveItem[i] = id;
-                    totalPrice += parseInt(document.getElementById(`r_i_price_${id}`).textContent.replace("円", ""));
-                    break;
-                }
+                totalPrice += price;
+                selectedCount++;
+                
+                updateTotalPrice();
+                updateSelectedCount();
+                updateSelectedItems();
+                updateReserveForm();
             }
-
-            // 合計金額を更新
-            document.getElementById('total_price').textContent = totalPrice;
-
-            saveToLocalStorage();
         });
 
-        decrementButton.addEventListener('click', () => {
+        decrementBtn.addEventListener('click', () => {
             let count = parseInt(counterElement.textContent) || 0;
             if (count > 0) {
                 count--;
                 counterElement.textContent = count;
-
-                for (let i = 4; i >= 0; i--) {
-                    if (reserveItem[i] === id) {
-                        reserveItem[i] = "None";
-                        totalPrice -= parseInt(document.getElementById(`r_i_price_${id}`).textContent.replace("円", ""));
-                        break;
-                    }
-                }
-
-                // 合計金額を更新
-                document.getElementById('total_price').textContent = totalPrice;
-
-                saveToLocalStorage();
+                totalPrice -= price;
+                selectedCount--;
+                
+                updateTotalPrice();
+                updateSelectedCount();
+                updateSelectedItems();
+                updateReserveForm();
             }
         });
     });
 
-    // ローカルストレージにデータを保存する関数
-    function saveToLocalStorage() {
-        localStorage.setItem("reserveItem", JSON.stringify(reserveItem));
-        localStorage.setItem("totalPrice", JSON.stringify(totalPrice));
-    }
-
-    // 予約ボタンのクリック処理
-    document.getElementById('reserve_button').addEventListener('click', () => {
-        if (window.confirm('予約しますか？')) {
-            // 予約内容をフォームにセット
-            document.getElementById('reserve_item_0').value = reserveItem[0];
-            document.getElementById('reserve_item_1').value = reserveItem[1];
-            document.getElementById('reserve_item_2').value = reserveItem[2];
-            document.getElementById('reserve_item_3').value = reserveItem[3];
-            document.getElementById('reserve_item_4').value = reserveItem[4];
-
-            // ローカルストレージをクリア
-            localStorage.removeItem("reserveItem");
-            localStorage.removeItem("totalPrice");
-
-            // フォームを送信
+    // Reserve button functionality
+    const reserveButton = document.getElementById('reserve_button');
+    reserveButton.addEventListener('click', () => {
+        if (selectedCount > 0) {
             document.getElementById('reserveForm').submit();
         }
     });
 
-    // 予約フォームのチェック処理
-    function check() {
-        console.log("予約します。");
-        return true;
+    // Reset button functionality
+    const resetButton = document.getElementById('reset_button');
+    resetButton.addEventListener('click', () => {
+        // Clear all quantity displays
+        document.querySelectorAll('.quantity-display').forEach(display => {
+            display.textContent = '0';
+        });
+        
+        // Reset total price and selected count
+        totalPrice = 0;
+        selectedCount = 0;
+        
+        // Update displays
+        updateTotalPrice();
+        updateSelectedCount();
+        updateSelectedItems();
+        
+        // Clear localStorage
+        localStorage.removeItem("reserveItem");
+        
+        // Reset form fields
+        for (let i = 0; i < 5; i++) {
+            const field = document.getElementById(`reserve_item_${i}`);
+            field.value = "None";
+        }
+        
+        // Show success message
+        if (window.KobuyApp && window.KobuyApp.FlashMessages) {
+            window.KobuyApp.FlashMessages.show("選択をリセットしました", "success");
+        }
+    });
+
+    function updateTotalPrice() {
+        const totalPriceElement = document.getElementById('total_price');
+        if (totalPriceElement) {
+            totalPriceElement.textContent = totalPrice;
+        }
+    }
+
+    function updateSelectedCount() {
+        const selectedCountElement = document.querySelector('.selected-count');
+        if (selectedCountElement) {
+            selectedCountElement.textContent = selectedCount;
+        }
+    }
+
+    function updateSelectedItems() {
+        const selectedItemsContainer = document.getElementById('selectedItems');
+        if (!selectedItemsContainer) return;
+        
+        const items = [];
+        
+        document.querySelectorAll('.product-card').forEach((card) => {
+            const id = card.dataset.id;
+            const countElement = document.getElementById(`r_i_cnt_${id}`);
+            const priceElement = document.getElementById(`r_i_price_${id}`);
+            const nameElement = card.querySelector('.product-name');
+            
+            // Check if all required elements exist
+            if (!countElement || !priceElement || !nameElement) return;
+            
+            const count = parseInt(countElement.textContent) || 0;
+            if (count > 0) {
+                const name = nameElement.textContent;
+                const price = priceElement.textContent;
+                const image = card.querySelector('.product-img');
+                
+                items.push({
+                    id: id,
+                    name: name,
+                    price: price,
+                    count: count,
+                    image: image ? image.src : null
+                });
+            }
+        });
+
+        if (items.length === 0) {
+            selectedItemsContainer.innerHTML = `
+                <div class="empty-selection">
+                    <span class="material-icons">shopping_cart</span>
+                    <p>商品を選択してください</p>
+                </div>
+            `;
+        } else {
+            selectedItemsContainer.innerHTML = items.map(item => `
+                <div class="selected-item">
+                    ${item.image ? `<img src="${item.image}" alt="${item.name}" class="selected-item-image">` : ''}
+                    <div class="selected-item-info">
+                        <div class="selected-item-name">${item.name}</div>
+                        <div class="selected-item-price">${item.price}</div>
+                    </div>
+                    <div class="selected-item-quantity">×${item.count}</div>
+                </div>
+            `).join('');
+        }
+    }
+
+    function updateReserveForm() {
+        const items = [];
+        document.querySelectorAll('.product-card').forEach((card) => {
+            const id = card.dataset.id;
+            const countElement = document.getElementById(`r_i_cnt_${id}`);
+            
+            if (!countElement) return;
+            
+            const count = parseInt(countElement.textContent) || 0;
+            if (count > 0) {
+                for (let i = 0; i < count; i++) {
+                    items.push(id);
+                }
+            }
+        });
+
+        // Fill reserve form fields
+        for (let i = 0; i < 5; i++) {
+            const field = document.getElementById(`reserve_item_${i}`);
+            if (field) {
+                field.value = items[i] || "None";
+            }
+        }
+
+        // Save to localStorage
+        const reserveData = {};
+        for (let i = 0; i < 5; i++) {
+            reserveData[i] = items[i] || "None";
+        }
+        localStorage.setItem("reserveItem", JSON.stringify(reserveData));
+    }
+
+    // Highlight functionality
+    const urlParams = new URLSearchParams(window.location.search);
+    const highlightId = urlParams.get('highlight');
+
+    if (highlightId) {
+        const highlightCard = document.querySelector(`.product-card[data-id="${highlightId}"]`);
+        if (highlightCard) {
+            highlightCard.style.border = "3px solid var(--md-sys-color-primary)";
+            highlightCard.style.boxShadow = "0 0 15px rgba(66, 104, 51, 0.3)";
+            highlightCard.scrollIntoView({ behavior: "smooth", block: "center" });
+        }
     }
 });
 </script>

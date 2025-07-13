@@ -17,7 +17,7 @@
                 <div style="display: flex; gap: 16px;">
                     <h4>現在の販売状態:<span {% if sale_state.state == 0 %} style="color: var(--md-sys-color-error);" {% endif %}>{{ sale_state.state_name }}</span></h4>
                 </div>
-                <p style="font-size: medium;">開始を押すと販売を開始します。終了を押すと販売を終了します。</p>
+                <p style="font-size: medium;">開始を押すと販売を開始します。<br>終了を押すと販売を終了します。</p>
                     
                 <div style="">
                     <md-filled-button href="/admin/start_sale" aria-label="販売を開始する">

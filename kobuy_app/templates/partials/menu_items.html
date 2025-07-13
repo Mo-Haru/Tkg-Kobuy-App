@@ -1,0 +1,57 @@
+{% for menu in menus %}
+<div class="menu-card" data-category="{{ menu.category }}">
+    <div class="menu-image">
+        {% if menu.image %}
+            <img src="{{ url_for('static', filename=menu.image) }}" alt="{{ menu.productname }}" loading="lazy">
+        {% else %}
+            <div class="menu-placeholder">
+                <span class="material-icons">restaurant</span>
+            </div>
+        {% endif %}
+        {% if menu.buy_cnt > 10 %}
+            <div class="popular-badge">
+                <span class="material-icons">star</span>
+                人気
+            </div>
+        {% endif %}
+    </div>
+    
+    <div class="menu-content">
+        <h3 class="menu-title">{{ menu.productname }}</h3>
+        <p class="menu-description">{{ menu.description or '商品の説明がありません' }}</p>
+        <div class="menu-price">¥{{ menu.price }}</div>
+        
+        {% set stock = menu.stock %}
+        <div class="menu-stock">
+            {% if stock and stock.today_stock > 0 %}
+                <span class="stock-available">
+                    <span class="material-icons">check_circle</span>
+                    在庫あり ({{ stock.today_stock }}個)
+                </span>
+            {% else %}
+                <span class="stock-unavailable">
+                    <span class="material-icons">cancel</span>
+                    在庫切れ
+                </span>
+            {% endif %}
+        </div>
+        
+        <div class="menu-actions">
+            <button class="btn btn-outline btn-sm" onclick="addToReservation({{ menu.id }})">
+                <span class="material-icons">add_shopping_cart</span>
+                予約に追加
+            </button>
+        </div>
+    </div>
+</div>
+{% endfor %}
+
+{% if not menus %}
+<div class="no-results">
+    <div class="no-results-icon">
+        <span class="material-icons">search_off</span>
+    </div>
+    <h3>商品が見つかりません</h3>
+    <p>検索条件を変更してお試しください</p>
+</div>
+{% endif %} 

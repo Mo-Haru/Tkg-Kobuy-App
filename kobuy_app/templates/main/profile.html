@@ -1,79 +1,439 @@
 {% extends "layout.html" %}
 
 {% block content %}
-<div style="padding: 5px; display: flex; justify-content: center; align-items: flex-start; min-height: 100vh;">
-    <!-- カードデザインのコンテナ -->
-    <md-elevated-card style="width: 100%; max-width: 600px; padding: 16px; display: block;">
-        <!-- タイトル -->
-        <h1 class="" style="margin-bottom: 24px;">ユーザー情報</h1>
-        <p class="md-body-large" style="color: var(--md-sys-color-primary); font-weight: bold; margin-bottom: 16px;">
-            {{ data.current_user_lastname }} {{ data.current_user_firstname }} さん
-        </p>
-
-        <!-- ユーザー情報リスト -->
-        <ul style="list-style: none; padding: 0; margin: 0;">
-            <li class="md-body-medium" style="margin-bottom: 8px;">
-                <strong>ユーザーID:</strong> {{ data.current_user_id }}
-            </li>
-            <li class="md-body-medium" style="margin-bottom: 8px;">
-                <strong>ユーザー名:</strong> {{ data.current_user_lastname }} {{ data.current_user_firstname }}
-            </li>
-            <li class="md-body-medium" style="margin-bottom: 8px;">
-                <strong>メールアドレス:</strong> {{ data.current_user_email }}
-            </li>
-            <li class="md-body-medium" style="margin-bottom: 8px;">
-                <strong>学年/クラス/番号:</strong> {{ data.current_user_grade }}/{{ data.current_user_cls }}/{{ data.current_user_num }}
-            </li>
-        </ul>
-
-        <!-- ボタンセクション -->
-        <div style="margin-top: 24px; display: flex; justify-content: space-between;">
-            <!-- 前のページに戻るボタン -->
-            <md-filled-button href="javascript:history.back();">
-                <span>戻る</span>
-                <span slot="icon" class="material-icons  head_icon" viewBox="0 0 48 48">arrow_back</span>
-            </md-filled-button>
-            <!-- ログアウトボタン -->
-            <md-filled-button href="/logout">
-                <span>ログアウト</span>
-                <span slot="icon" class="material-icons  head_icon" viewBox="0 0 48 48">logout</span>
-            </md-filled-button>
+<div class="profile-container fade-in">
+    <!-- Profile Header -->
+    <section class="profile-header">
+        <div class="profile-avatar">
+            <span class="material-icons avatar-icon">account_circle</span>
         </div>
-    </md-elevated-card>
+        <div class="profile-info">
+            <h1 class="profile-name">{{ data.current_user_lastname }} {{ data.current_user_firstname }}</h1>
+            <p class="profile-role">
+                {% if data.role == "[<Role admin>]" %}
+                    <span class="material-icons role-icon">admin_panel_settings</span>
+                    管理者
+                {% else %}
+                    <span class="material-icons role-icon">person</span>
+                    一般ユーザー
+                {% endif %}
+            </p>
+        </div>
+    </section>
+
+    <!-- Floating Back Button -->
+    <md-filled-icon-button href="javascript:history.back();" class="fab-back-btn" aria-label="戻る">
+        <span class="material-icons">arrow_back</span>
+    </md-filled-icon-button>
+
+    <!-- Profile Content -->
+    <div class="profile-content">
+        <div class="content-grid">
+            <!-- User Information Card -->
+            <section class="profile-card">
+                <div class="card-header">
+                    <h2 class="card-title">
+                        <span class="material-icons">person</span>
+                        ユーザー情報
+                    </h2>
+                </div>
+                <div class="card-body">
+                    <div class="info-grid">
+                        <div class="info-item">
+                            <div class="info-label">
+                                <span class="material-icons">badge</span>
+                                ユーザーID
+                            </div>
+                            <div class="info-value">{{ data.current_user_id }}</div>
+                        </div>
+                        
+                        <div class="info-item">
+                            <div class="info-label">
+                                <span class="material-icons">email</span>
+                                メールアドレス
+                            </div>
+                            <div class="info-value">{{ data.current_user_email }}</div>
+                        </div>
+                        
+                        <div class="info-item">
+                            <div class="info-label">
+                                <span class="material-icons">school</span>
+                                学年・クラス・番号
+                            </div>
+                            <div class="info-value">{{ data.current_user_grade }}年{{ data.current_user_cls }}組{{ data.current_user_num }}番</div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Quick Actions Card -->
+            <section class="profile-card">
+                <div class="card-header">
+                    <h2 class="card-title">
+                        <span class="material-icons">settings</span>
+                        クイックアクション
+                    </h2>
+                </div>
+                <div class="card-body">
+                    <div class="action-grid">
+                        <md-filled-tonal-button href="/my_reserved_list" class="action-btn">
+                            <span slot="icon" class="material-icons">history</span>
+                            予約履歴
+                        </md-filled-tonal-button>
+                        
+                        <md-filled-tonal-button href="/rule" class="action-btn">
+                            <span slot="icon" class="material-icons">description</span>
+                            利用規約
+                        </md-filled-tonal-button>
+                        
+                        <md-filled-tonal-button href="/help" class="action-btn">
+                            <span slot="icon" class="material-icons">help</span>
+                            ヘルプ
+                        </md-filled-tonal-button>
+                    </div>
+                </div>
+            </section>
+        </div>
+
+        <!-- Account Actions Card -->
+        <section class="profile-card">
+            <div class="card-header">
+                <h2 class="card-title">
+                    <span class="material-icons">security</span>
+                    アカウント管理
+                </h2>
+            </div>
+            <div class="card-body">
+                <div class="action-buttons">
+                    <md-filled-button href="/logout" class="logout-btn">
+                        <span slot="icon" class="material-icons">logout</span>
+                        ログアウト
+                    </md-filled-button>
+                </div>
+            </div>
+        </section>
+    </div>
 </div>
 
 <style>
-    /* 見出しの虹色スタイル */
-    .rainbow {
-        font-size: 2rem;
-        font-weight: bold;
-        text-align: center;
-        background: linear-gradient(90deg, #FF5722, #FFC107, #4CAF50, #2196F3, #9C27B0);
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
+/* Profile Container */
+.profile-container {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: var(--spacing-lg);
+}
+
+/* Profile Header */
+.profile-header {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-lg);
+    padding: var(--spacing-xl);
+    background: linear-gradient(135deg, var(--md-sys-color-primary-container) 0%, var(--md-sys-color-surface-container) 100%);
+    border-radius: var(--border-radius-xl);
+    margin-bottom: var(--spacing-xl);
+    box-shadow: var(--shadow-lg);
+}
+
+/* Floating Action Button */
+.fab-back-btn {
+    position: fixed;
+    bottom: calc(60px + var(--spacing-lg));
+    right: var(--spacing-xl);
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    background-color: var(--md-sys-color-primary);
+    color: var(--md-sys-color-on-primary);
+    box-shadow: var(--shadow-lg);
+    z-index: 9999;
+    transition: all var(--transition-fast);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.fab-back-btn:hover {
+    transform: scale(1.1);
+    box-shadow: var(--shadow-xl);
+}
+
+.fab-back-btn .material-icons {
+    font-size: 24px;
+}
+
+.profile-avatar {
+    flex-shrink: 0;
+    width: 80px;
+    height: 80px;
+    background: var(--md-sys-color-primary);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: var(--shadow-md);
+}
+
+.avatar-icon {
+    font-size: 3rem;
+    color: var(--md-sys-color-on-primary);
+}
+
+.profile-info {
+    flex: 1;
+}
+
+.profile-name {
+    font-size: 2rem;
+    font-weight: 700;
+    color: var(--md-sys-color-on-primary-container);
+    margin: 0 0 var(--spacing-sm) 0;
+    line-height: 1.2;
+}
+
+.profile-role {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-xs);
+    color: var(--md-sys-color-primary);
+    font-weight: 500;
+    margin: 0;
+    font-size: 1.1rem;
+}
+
+.role-icon {
+    font-size: 1.2rem;
+}
+
+/* Profile Content */
+.profile-content {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-lg);
+}
+
+/* Content Grid for Desktop */
+.content-grid {
+    display: grid;
+    gap: var(--spacing-lg);
+    grid-template-columns: 1fr;
+}
+
+/* Desktop Layout */
+@media (min-width: 769px) {
+    .content-grid {
+        grid-template-columns: 1fr 1fr;
+        gap: var(--spacing-xl);
     }
     
-    /* md-body-large と md-body-medium の補完 */
-    .md-body-large {
+    .profile-card {
+        height: fit-content;
+    }
+}
+
+/* Large Desktop Layout */
+@media (min-width: 1200px) {
+    .profile-container {
+        max-width: 1200px;
+    }
+    
+    .content-grid {
+        grid-template-columns: 1fr 1fr;
+        gap: var(--spacing-xxl);
+    }
+}
+
+/* Profile Card */
+.profile-card {
+    background: var(--md-sys-color-surface-container);
+    border-radius: var(--border-radius-lg);
+    border: 1px solid var(--md-sys-color-outline);
+    box-shadow: var(--shadow-sm);
+    overflow: hidden;
+    transition: box-shadow var(--transition-fast);
+}
+
+.profile-card:hover {
+    box-shadow: var(--shadow-md);
+}
+
+.card-header {
+    padding: var(--spacing-lg);
+    background: var(--md-sys-color-surface-container-high);
+    border-bottom: 1px solid var(--md-sys-color-outline);
+}
+
+.card-title {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: var(--md-sys-color-on-surface);
+    margin: 0;
+}
+
+.card-title .material-icons {
+    color: var(--md-sys-color-primary);
+}
+
+.card-body {
+    padding: var(--spacing-lg);
+}
+
+/* Info Grid */
+.info-grid {
+    display: grid;
+    gap: var(--spacing-lg);
+}
+
+.info-item {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-xs);
+    padding: var(--spacing-md);
+    background: var(--md-sys-color-surface-container-low);
+    border-radius: var(--border-radius-md);
+    border: 1px solid var(--md-sys-color-outline-variant);
+}
+
+.info-label {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-xs);
+    font-size: 0.9rem;
+    font-weight: 500;
+    color: var(--md-sys-color-on-surface-variant);
+}
+
+.info-label .material-icons {
+    font-size: 1rem;
+    color: var(--md-sys-color-primary);
+}
+
+.info-value {
+    font-size: 1rem;
+    font-weight: 500;
+    color: var(--md-sys-color-on-surface);
+    word-break: break-all;
+}
+
+/* Action Grid */
+.action-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: var(--spacing-md);
+}
+
+.action-btn {
+    height: 48px;
+    border-radius: var(--border-radius-md);
+}
+
+/* Action Buttons */
+.action-buttons {
+    display: flex;
+    gap: var(--spacing-md);
+    flex-wrap: wrap;
+}
+
+.back-btn {
+    background-color: var(--md-sys-color-secondary);
+    color: var(--md-sys-color-on-secondary);
+}
+
+.logout-btn {
+    background-color: var(--md-sys-color-error);
+    color: var(--md-sys-color-on-error);
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .profile-container {
+        padding: var(--spacing-md);
+    }
+    
+    .profile-header {
+        flex-direction: column;
+        text-align: center;
+        padding: var(--spacing-lg);
+    }
+    
+    .profile-name {
+        font-size: 1.5rem;
+    }
+    
+    .info-grid {
+        gap: var(--spacing-md);
+    }
+    
+    .action-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .action-buttons {
+        flex-direction: column;
+    }
+    
+    .action-buttons md-filled-button {
+        width: 100%;
+    }
+    
+    .fab-back-btn {
+        bottom: calc(80px + var(--spacing-md)); /* モバイルメニューの高さ + 余白 */
+        right: var(--spacing-lg);
+        width: 48px;
+        height: 48px;
+    }
+    
+    .fab-back-btn .material-icons {
+        font-size: 20px;
+    }
+}
+
+@media (max-width: 480px) {
+    .profile-container {
+        padding: var(--spacing-sm);
+    }
+    
+    .profile-avatar {
+        width: 60px;
+        height: 60px;
+    }
+    
+    .avatar-icon {
+        font-size: 2rem;
+    }
+    
+    .profile-name {
         font-size: 1.25rem;
     }
-
-    .md-body-medium {
-        font-size: 1rem;
+    
+    .card-header,
+    .card-body {
+        padding: var(--spacing-md);
     }
-
-    /* カード影と丸み */
-    md-elevated-card {
-        border-radius: 12px;
-        box-shadow: var(--md-sys-elevation-level3);
-        background: var(--md-sys-color-surface);
+    
+    .fab-back-btn {
+        bottom: calc(80px + var(--spacing-sm)); /* モバイルメニューの高さ + 余白 */
+        right: var(--spacing-md);
+        width: 44px;
+        height: 44px;
     }
-
-    /* ボタンのカスタマイズ */
-    md-filled-button {
-        --md-comp-filled-button-container-color: var(--md-sys-color-primary);
-        --md-comp-filled-button-label-text-color: var(--md-sys-color-on-primary);
-        --md-comp-filled-button-icon-color: var(--md-sys-color-on-primary);
+    
+    .fab-back-btn .material-icons {
+        font-size: 18px;
     }
+}
+
+/* Animation */
+.fade-in {
+    animation: fadeIn 0.5s ease-in-out;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
 </style>
 {% endblock %}

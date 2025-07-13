@@ -3,71 +3,266 @@
 {% block content %}
 <div class="admin_main_div">
     <h1 class="h1_main">ようこそ購買予約アプリ For 管理者へ</h1>
-</div>
-<div class="row">
-  <div class="col">
-    <div class="card cd_l" style="border-radius: 20px;">
-      <div class="card-body">
-        <h5 class="card-title">予約者リスト</h5>
-        <p class="card-text">今までの予約者を確認することが出来ます。</p>
-        <md-filled-button href="/admin/reserve_list">
-          <span>確認</span>
-          <span slot="icon" class="material-icons head_icon" viewBox="0 0 48 48">arrow_forward</span>
-        </md-filled-button>
-        
-      </div>
-    </div>
-  </div>
-  <div class="col">
-    <div class="card cd_r" style="border-radius: 20px;">
-      <div class="card-body">
-        <h5 class="card-title">メニュー編集</h5>
-        <p class="card-text">メニューの内容の編集、追加、削除ができます。</p>
-        <md-filled-button href="/admin/menu/edit">
-          <span>編集する</span>
-          <span slot="icon" class="material-icons head_icon" viewBox="0 0 48 48">edit</span>
-        </md-filled-button>
-      </div>
-    </div>
-  </div>
+    <p class="admin-subtitle">管理機能を選択してください</p>
 </div>
 
-<div class="row">
-  <div class="col">
-    <div class="card cd_l" style="border-radius: 20px;  margin-top: 20px;">
-      <div class="card-body">
-        <h5 class="card-title">在庫管理</h5>
-        <p class="card-text">在庫数を管理、初期化することができます。</p>
-        <md-filled-button href="/admin/menu/stock">
-          <span>確認</span>
-          <span slot="icon" class="material-icons head_icon" viewBox="0 0 48 48">arrow_forward</span>
-        </md-filled-button>
-        
-      </div>
+<div class="admin-dashboard">
+    <div class="dashboard-grid">
+        <div class="dashboard-card">
+            <div class="card-icon">
+                <span class="material-icons">people</span>
+            </div>
+            <div class="card-content">
+                <h3>予約者リスト</h3>
+                <p>今までの予約者を確認することが出来ます。</p>
+                <md-filled-button href="/admin/reserve_list" class="card-action">
+                    <span>確認</span>
+                    <span slot="icon" class="material-icons">arrow_forward</span>
+                </md-filled-button>
+            </div>
+        </div>
+
+        <div class="dashboard-card">
+            <div class="card-icon">
+                <span class="material-icons">menu_book</span>
+            </div>
+            <div class="card-content">
+                <h3>メニュー編集</h3>
+                <p>メニューの内容の編集、追加、削除ができます。</p>
+                <md-filled-button href="/admin/menu/edit" class="card-action">
+                    <span>編集する</span>
+                    <span slot="icon" class="material-icons">edit</span>
+                </md-filled-button>
+            </div>
+        </div>
+
+        <div class="dashboard-card">
+            <div class="card-icon">
+                <span class="material-icons">inventory</span>
+            </div>
+            <div class="card-content">
+                <h3>在庫管理</h3>
+                <p>在庫数を管理、初期化することができます。</p>
+                <md-filled-button href="/admin/menu/stock" class="card-action">
+                    <span>確認</span>
+                    <span slot="icon" class="material-icons">arrow_forward</span>
+                </md-filled-button>
+            </div>
+        </div>
+
+        <div class="dashboard-card">
+            <div class="card-icon">
+                <span class="material-icons">store</span>
+            </div>
+            <div class="card-content">
+                <h3>販売設定</h3>
+                <p>予約のできる・できないの設定などができます</p>
+                <md-filled-button href="/admin/option" class="card-action">
+                    <span>確認</span>
+                    <span slot="icon" class="material-icons">arrow_forward</span>
+                </md-filled-button>
+            </div>
+        </div>
+
+        <div class="dashboard-card">
+            <div class="card-icon">
+                <span class="material-icons">contact_support</span>
+            </div>
+            <div class="card-content">
+                <h3>お問い合わせ</h3>
+                <p>ユーザーからのお問い合わせを確認できます。</p>
+                <md-filled-button href="/admin/contact_list" class="card-action">
+                    <span>確認</span>
+                    <span slot="icon" class="material-icons">arrow_forward</span>
+                </md-filled-button>
+            </div>
+        </div>
+
+        <div class="dashboard-card">
+            <div class="card-icon">
+                <span class="material-icons">bar_chart</span>
+            </div>
+            <div class="card-content">
+                <h3>統計情報</h3>
+                <p>売上や人気商品の統計を確認できます。</p>
+                <md-filled-button href="/admin/statistics" class="card-action">
+                    <span>確認</span>
+                    <span slot="icon" class="material-icons">arrow_forward</span>
+                </md-filled-button>
+            </div>
+        </div>
     </div>
-  </div>
-  <div class="col">
-    <div class="card cd_r" style="border-radius: 20px; margin-top: 20px;">
-      <div class="card-body">
-        <h5 class="card-title">販売設定</h5>
-        <p class="card-text">予約のできる・できないの設定などができます</p>
-        <md-filled-button href="/admin/option">
-          <span>確認</span>
-          <span slot="icon" class="material-icons head_icon" viewBox="0 0 48 48">arrow_forward</span>
-        </md-filled-button>
-      </div>
-    </div>
-  </div>
 </div>
 
 <style>
-.admin_main_div_c{
-  width: 100%;
-  height: 200px;
-  border-radius: 20px;
-  border: 1px solid var(--md-sys-color-outline);
-  display: flex;
-  padding: 10px;
+.admin_main_div {
+    text-align: center;
+    margin: var(--spacing-lg) 0;
+    padding: var(--spacing-xl);
+    background: var(--gradient-card);
+    border-radius: var(--border-radius-xl);
+    box-shadow: var(--shadow-lg);
+    backdrop-filter: blur(20px);
+    border: 1px solid rgba(134, 239, 172, 0.2);
+    position: relative;
+    overflow: hidden;
+}
+
+.admin_main_div::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: var(--md-sys-color-primary);
+    opacity: 0.02;
+    z-index: -1;
+}
+
+.h1_main {
+    font-size: 32px;
+    font-weight: 700;
+    color: var(--md-sys-color-on-surface);
+    margin-bottom: var(--spacing-sm);
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+
+.admin-subtitle {
+    color: var(--md-sys-color-on-surface-variant);
+    font-size: 16px;
+    margin: 0;
+    font-weight: 500;
+}
+
+.admin-dashboard {
+    margin-top: var(--spacing-xl);
+}
+
+.dashboard-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+    gap: var(--spacing-lg);
+}
+
+.dashboard-card {
+    background: var(--gradient-card);
+    border-radius: var(--border-radius-xl);
+    padding: var(--spacing-xl);
+    box-shadow: var(--shadow-md);
+    transition: all var(--transition-normal);
+    border: 1px solid rgba(134, 239, 172, 0.2);
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    overflow: hidden;
+    backdrop-filter: blur(10px);
+}
+
+.dashboard-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: var(--gradient-primary);
+    opacity: 0;
+    transition: opacity var(--transition-fast);
+}
+
+.dashboard-card:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--shadow-lg);
+}
+
+.dashboard-card:hover::before {
+    opacity: 0.5;
+}
+
+.card-icon {
+    width: 72px;
+    height: 72px;
+    background: var(--md-sys-color-primary-container);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: var(--spacing-lg);
+    box-shadow: var(--shadow-sm);
+    position: relative;
+    overflow: hidden;
+}
+
+.card-icon::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 50%;
+}
+
+.card-icon .material-icons {
+    font-size: 36px;
+    color: var(--md-sys-color-on-primary-container);
+    position: relative;
+    z-index: 1;
+    filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.05));
+}
+
+.card-content h3 {
+    font-size: 22px;
+    font-weight: 700;
+    color: var(--md-sys-color-on-surface);
+    margin-bottom: var(--spacing-sm);
+}
+
+.card-content p {
+    color: var(--md-sys-color-on-surface-variant);
+    margin-bottom: var(--spacing-lg);
+    flex-grow: 1;
+    line-height: 1.6;
+    font-weight: 500;
+}
+
+.card-action {
+    align-self: flex-start;
+    background: var(--md-sys-color-primary) !important;
+    border-radius: var(--border-radius-lg) !important;
+    box-shadow: var(--shadow-sm) !important;
+    transition: all var(--transition-fast) !important;
+}
+
+.card-action:hover {
+    transform: translateY(-1px) !important;
+    box-shadow: var(--shadow-md) !important;
+}
+
+@media (max-width: 768px) {
+    .dashboard-grid {
+        grid-template-columns: 1fr;
+        gap: var(--spacing-md);
+    }
+    
+    .dashboard-card {
+        padding: var(--spacing-lg);
+    }
+    
+    .h1_main {
+        font-size: 24px;
+    }
+    
+    .card-icon {
+        width: 60px;
+        height: 60px;
+    }
+    
+    .card-icon .material-icons {
+        font-size: 28px;
+    }
 }
 </style>
 {% endblock %}

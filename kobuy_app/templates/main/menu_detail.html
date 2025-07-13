@@ -1,52 +1,441 @@
 {% extends "layout.html" %}
 
 {% block content %}
-<div class="m_d_card" style="display: flex; align-items: flex-start; gap: 20px; padding: 20px; ">
-    <div class="m_d_img" style="flex-shrink: 0; width: 50%;">
-        {% if menu_item.product_image %}
-        <img src="{{ url_for('static', filename=menu_item.product_image) }}" alt="{{ menu_item.productname }}の画像" width="100%" height="100%" style="border-radius: 20px;">
-        {% else %}
-        {{ menu_item.productname }}の商品画像が存在しないか、読み込むことができませんでした。
-        {% endif %}
+<div class="product-detail-container fade-in">
+    <!-- Product Header -->
+    <section class="product-header">
+        <div class="header-content">
+            <div class="breadcrumb">
+                <md-filled-tonal-button href="/menu" class="breadcrumb-btn">
+                    <span slot="icon" class="material-icons">restaurant_menu</span>
+                    メニュー
+                </md-filled-tonal-button>
+                <span class="material-icons">chevron_right</span>
+                <span class="breadcrumb-text">{{ menu_item.productname }}</span>
+            </div>
+        </div>
+    </section>
+
+    <!-- Product Content -->
+    <div class="product-content">
+        <div class="product-grid">
+            <!-- Product Image -->
+            <section class="product-image-section">
+                <div class="image-container">
+                    {% if menu_item.product_image %}
+                    <img src="{{ url_for('static', filename=menu_item.product_image) }}" 
+                         alt="{{ menu_item.productname }}の画像" 
+                         class="product-image">
+                    {% else %}
+                    <div class="no-image">
+                        <span class="material-icons">restaurant</span>
+                        <p>商品画像がありません</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </section>
+
+            <!-- Product Info -->
+            <section class="product-info-section">
+                <div class="product-info-card">
+                    <div class="product-header-info">
+                        <h1 class="product-title">{{ menu_item.productname }}</h1>
+                        <div class="product-price">
+                            <span class="price-amount">{{ menu_item.price }}</span>
+                            <span class="price-currency">円</span>
+                        </div>
+                    </div>
+
+                    <div class="product-description">
+                        <h2 class="description-title">
+                            <span class="material-icons">info</span>
+                            商品説明
+                        </h2>
+                        <p class="description-text">{{ menu_item.explanation or '商品の詳細な説明はありません。' }}</p>
+                    </div>
+
+                    <div class="product-actions">
+                        <div class="action-buttons">
+                            <md-filled-button 
+                                type="submit" 
+                                form="reserveForm" 
+                                class="reserve-btn primary">
+                                <span slot="icon" class="material-icons">shopping_cart</span>
+                                この商品を予約する
+                            </md-filled-button>
+                            
+                            <md-outlined-button 
+                                href="/reserve?highlight={{ menu_item.id }}" 
+                                class="reserve-page-btn">
+                                <span slot="icon" class="material-icons">add_shopping_cart</span>
+                                複数商品を予約
+                            </md-outlined-button>
+                        </div>
+                        
+                        <p class="action-note">
+                            複数商品や他の商品も予約したい場合は「複数商品を予約」ボタンをご利用ください。
+                        </p>
+                    </div>
+                </div>
+            </section>
+        </div>
     </div>
 
+    <!-- Floating Back Button -->
+    <md-filled-icon-button href="javascript:history.back();" class="fab-back-btn" aria-label="戻る">
+        <span class="material-icons">arrow_back</span>
+    </md-filled-icon-button>
 
-    <div style="flex-grow: 1;">
-    <div class="m_d_title" style="font-size: 1.8em; font-weight: 600; margin-bottom: 10px;">
-        {{ menu_item.productname }} - {{ menu_item.price }}円
-        <md-text-button href="javascript:history.back();">
-            <span>前のページへ戻る</span>
-            <span slot="icon" class="material-icons  head_icon" viewBox="0 0 48 48">arrow_back</span>
-        </md-text-button>
-
-    </div>
-    <div class="m_d_text" style="font-size: 1.1em; color: #555;">{{ menu_item.explanation }}</div>
-    <md-divider style="margin-top: 24px; margin-bottom: 24px; width: 100%;"></md-divider>
-    <form action="" method="POST">
-        <md-filled-button>
-            <span>この商品を予約する</span>
-            <span slot="icon" class="material-icons  head_icon" viewBox="0 0 48 48">shopping_cart</span>
-        </md-filled-button>
+    <!-- Reserve Form (Hidden) -->
+    <form id="reserveForm" method="POST" style="display: none;">
+        <input type="hidden" name="reserve_item_0" value="{{ menu_item.id }}">
+        <input type="hidden" name="reserve_item_1" value="None">
+        <input type="hidden" name="reserve_item_2" value="None">
+        <input type="hidden" name="reserve_item_3" value="None">
+        <input type="hidden" name="reserve_item_4" value="None">
     </form>
-    <p style="margin-top: 10px;">ほかの商品や複数個予約したい場合は下のボタンをクリックしてください</p>
-    <md-filled-button class="reserve" type="button" id="reserve_button_detail">
-        <span>予約ページへ移動</span>
-        <span slot="icon" class="material-icons  head_icon" viewBox="0 0 48 48">arrow_forward</span>
-    </md-filled-button>
-
 </div>
 
+<style>
+/* Product Detail Container */
+.product-detail-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: var(--spacing-lg);
+}
 
-<!-- 元のページに戻るリンク -->
+/* Product Header */
+.product-header {
+    margin-bottom: var(--spacing-xl);
+}
 
+.header-content {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
 
+.breadcrumb {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+}
 
-<script>
-    document.getElementById("reserve_button_detail").addEventListener("click", () => {
-        const productId = "{{ menu_item.id }}"; // 商品のID
-        window.location.href = `/reserve?highlight=${productId}`; // クエリパラメータ付きでリダイレクト
-    });
-</script>
+.breadcrumb-btn {
+    border-radius: var(--border-radius-md);
+}
 
+.breadcrumb-text {
+    color: var(--md-sys-color-on-surface-variant);
+    font-weight: 500;
+}
 
+/* Product Content */
+.product-content {
+    margin-bottom: var(--spacing-xl);
+}
+
+.product-grid {
+    display: grid;
+    gap: var(--spacing-xl);
+    grid-template-columns: 1fr;
+}
+
+/* Desktop Layout */
+@media (min-width: 1024px) {
+    .product-grid {
+        grid-template-columns: 1fr 1fr;
+        gap: var(--spacing-xxl);
+        align-items: start;
+    }
+}
+
+/* Product Image Section */
+.product-image-section {
+    order: 1;
+}
+
+.image-container {
+    position: relative;
+    border-radius: var(--border-radius-lg);
+    overflow: hidden;
+    background: var(--md-sys-color-surface-container);
+    border: 1px solid var(--md-sys-color-outline);
+    box-shadow: var(--shadow-sm);
+    transition: box-shadow var(--transition-fast);
+}
+
+.image-container:hover {
+    box-shadow: var(--shadow-md);
+}
+
+.product-image {
+    width: 100%;
+    height: auto;
+    display: block;
+    object-fit: cover;
+    min-height: 300px;
+}
+
+.no-image {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: var(--spacing-xxl);
+    color: var(--md-sys-color-on-surface-variant);
+    text-align: center;
+    min-height: 300px;
+}
+
+.no-image .material-icons {
+    font-size: 4rem;
+    margin-bottom: var(--spacing-md);
+    opacity: 0.5;
+}
+
+.no-image p {
+    margin: 0;
+    font-size: 1.1rem;
+    font-weight: 500;
+}
+
+/* Product Info Section */
+.product-info-section {
+    order: 2;
+}
+
+.product-info-card {
+    background: var(--md-sys-color-surface-container);
+    border-radius: var(--border-radius-lg);
+    border: 1px solid var(--md-sys-color-outline);
+    box-shadow: var(--shadow-sm);
+    overflow: hidden;
+    transition: box-shadow var(--transition-fast);
+}
+
+.product-info-card:hover {
+    box-shadow: var(--shadow-md);
+}
+
+.product-header-info {
+    padding: var(--spacing-xl);
+    background: var(--md-sys-color-surface-container-high);
+    border-bottom: 1px solid var(--md-sys-color-outline);
+}
+
+.product-title {
+    font-size: 2rem;
+    font-weight: 700;
+    color: var(--md-sys-color-on-surface);
+    margin: 0 0 var(--spacing-md) 0;
+    line-height: 1.2;
+}
+
+.product-price {
+    display: flex;
+    align-items: baseline;
+    gap: var(--spacing-xs);
+}
+
+.price-amount {
+    font-size: 2.5rem;
+    font-weight: 700;
+    color: var(--md-sys-color-primary);
+}
+
+.price-currency {
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: var(--md-sys-color-primary);
+}
+
+/* Product Description */
+.product-description {
+    padding: var(--spacing-xl);
+    border-bottom: 1px solid var(--md-sys-color-outline);
+}
+
+.description-title {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: var(--md-sys-color-on-surface);
+    margin: 0 0 var(--spacing-lg) 0;
+}
+
+.description-title .material-icons {
+    color: var(--md-sys-color-primary);
+}
+
+.description-text {
+    color: var(--md-sys-color-on-surface-variant);
+    line-height: 1.6;
+    margin: 0;
+    font-size: 1rem;
+}
+
+/* Product Actions */
+.product-actions {
+    padding: var(--spacing-xl);
+}
+
+.action-buttons {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-md);
+    margin-bottom: var(--spacing-lg);
+}
+
+.reserve-btn {
+    height: 56px;
+    font-size: 1.1rem;
+    font-weight: 600;
+}
+
+.reserve-page-btn {
+    height: 48px;
+    font-weight: 500;
+}
+
+.action-note {
+    color: var(--md-sys-color-on-surface-variant);
+    font-size: 0.875rem;
+    margin: 0;
+    line-height: 1.5;
+}
+
+/* Floating Back Button */
+.fab-back-btn {
+    position: fixed;
+    bottom: calc(60px + var(--spacing-lg));
+    right: var(--spacing-xl);
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    background-color: var(--md-sys-color-primary);
+    color: var(--md-sys-color-on-primary);
+    box-shadow: var(--shadow-lg);
+    z-index: 9999;
+    transition: all var(--transition-fast);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.fab-back-btn:hover {
+    transform: scale(1.1);
+    box-shadow: var(--shadow-xl);
+}
+
+.fab-back-btn .material-icons {
+    font-size: 24px;
+}
+
+/* Responsive Design */
+@media (max-width: 1023px) {
+    .product-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .product-image-section {
+        order: 1;
+    }
+    
+    .product-info-section {
+        order: 2;
+    }
+}
+
+@media (max-width: 768px) {
+    .product-detail-container {
+        padding: var(--spacing-md);
+    }
+    
+    .product-title {
+        font-size: 1.5rem;
+    }
+    
+    .price-amount {
+        font-size: 2rem;
+    }
+    
+    .price-currency {
+        font-size: 1.25rem;
+    }
+    
+    .product-header-info,
+    .product-description,
+    .product-actions {
+        padding: var(--spacing-lg);
+    }
+    
+    .action-buttons {
+        gap: var(--spacing-sm);
+    }
+    
+    .reserve-btn,
+    .reserve-page-btn {
+        width: 100%;
+    }
+    
+    .fab-back-btn {
+        bottom: calc(80px + var(--spacing-lg));
+        right: var(--spacing-lg);
+        width: 48px;
+        height: 48px;
+    }
+    
+    .fab-back-btn .material-icons {
+        font-size: 20px;
+    }
+}
+
+@media (max-width: 480px) {
+    .product-detail-container {
+        padding: var(--spacing-sm);
+    }
+    
+    .product-title {
+        font-size: 1.25rem;
+    }
+    
+    .price-amount {
+        font-size: 1.75rem;
+    }
+    
+    .price-currency {
+        font-size: 1.1rem;
+    }
+    
+    .product-header-info,
+    .product-description,
+    .product-actions {
+        padding: var(--spacing-md);
+    }
+    
+    .fab-back-btn {
+        bottom: calc(80px + var(--spacing-md));
+        right: var(--spacing-md);
+        width: 44px;
+        height: 44px;
+    }
+    
+    .fab-back-btn .material-icons {
+        font-size: 18px;
+    }
+}
+
+/* Animation */
+.fade-in {
+    animation: fadeIn 0.5s ease-in-out;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+</style>
 {% endblock %}

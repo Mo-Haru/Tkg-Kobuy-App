@@ -1,74 +1,398 @@
 {% extends "layout.html" %}
 
 {% block content %}
-<div class="center">
-    <h1>Register</h1>
-    <form method="POST">
-        {{ form.csrf_token }}
-        <div class="line">
-            <div class="login-box">
-            <div class="login-text">お名前</div>
+<div class="auth-container">
+    <div class="auth-card">
+        <div class="auth-header">
+            <div class="auth-icon">
+                <span class="material-icons">person_add</span>
             </div>
-            {{ form.lastname.label }} {{ form.lastname() }}
-            {% for error in form.lastname.errors %}
-            <span class="alert alert-danger" role="alert">[{{ error }}]</span>
-            {% endfor %}
-            {{ form.firstname.label }} {{ form.firstname() }}
-            {% for error in form.firstname.errors %}
-            <span class="alert alert-danger" role="alert">[{{ error }}]</span>
-            {% endfor %}
+            <h1 class="auth-title">アカウント作成</h1>
+            <p class="auth-subtitle">新しいアカウントを作成してください</p>
         </div>
-        <div class="line">
-            <div class="login-box">
-                <div class="login-text">学年/組/番号</div>
+
+        <form method="POST" data-ajax="true" class="auth-form">
+            {{ form.csrf_token }}
+            
+            <div class="form-section">
+                <h3 class="section-title">
+                    <span class="material-icons">person</span>
+                    基本情報
+                </h3>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <div class="form-field">
+                            <label for="{{ form.lastname.id }}" class="form-label">
+                                <span class="material-icons">badge</span>
+                                {{ form.lastname.label }}
+                            </label>
+                            {{ form.lastname(class="form-control", placeholder="姓を入力") }}
+                            {% for error in form.lastname.errors %}
+                                <span class="form-error">
+                                    <span class="material-icons">error</span>
+                                    {{ error }}
+                                </span>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <div class="form-field">
+                            <label for="{{ form.firstname.id }}" class="form-label">
+                                <span class="material-icons">badge</span>
+                                {{ form.firstname.label }}
+                            </label>
+                            {{ form.firstname(class="form-control", placeholder="名を入力") }}
+                            {% for error in form.firstname.errors %}
+                                <span class="form-error">
+                                    <span class="material-icons">error</span>
+                                    {{ error }}
+                                </span>
+                            {% endfor %}
+                        </div>
+                    </div>
                 </div>
-            {{ form.grade.label }} {{ form.grade() }}
-            {% for error in form.grade.errors %}
-            <span class="alert alert-danger" role="alert">[{{ error }}]</span>
-            {% endfor %}
-            {{ form.cls.label }} {{ form.cls() }}
-            {% for error in form.cls.errors %}
-            <span class="alert alert-danger" role="alert">[{{ error }}]</span>
-            {% endfor %}
-            {{ form.num.label }} {{ form.num() }}
-            {% for error in form.num.errors %}
-            <span class="alert alert-danger" role="alert">[{{ error }}]</span>
-            {% endfor %}
-        </div>  
-        <div class="line">
-            <div class="login-box">
-                <div class="login-text">メールアドレス</div>
+            </div>
+
+            <div class="form-section">
+                <h3 class="section-title">
+                    <span class="material-icons">school</span>
+                    学年・クラス情報
+                </h3>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <div class="form-field">
+                            <label for="{{ form.grade.id }}" class="form-label">
+                                <span class="material-icons">grade</span>
+                                {{ form.grade.label }}
+                            </label>
+                            {{ form.grade(class="form-control", placeholder="学年") }}
+                            {% for error in form.grade.errors %}
+                                <span class="form-error">
+                                    <span class="material-icons">error</span>
+                                    {{ error }}
+                                </span>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <div class="form-field">
+                            <label for="{{ form.cls.id }}" class="form-label">
+                                <span class="material-icons">group</span>
+                                {{ form.cls.label }}
+                            </label>
+                            {{ form.cls(class="form-control", placeholder="クラス") }}
+                            {% for error in form.cls.errors %}
+                                <span class="form-error">
+                                    <span class="material-icons">error</span>
+                                    {{ error }}
+                                </span>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <div class="form-field">
+                            <label for="{{ form.num.id }}" class="form-label">
+                                <span class="material-icons">tag</span>
+                                {{ form.num.label }}
+                            </label>
+                            {{ form.num(class="form-control", placeholder="番号") }}
+                            {% for error in form.num.errors %}
+                                <span class="form-error">
+                                    <span class="material-icons">error</span>
+                                    {{ error }}
+                                </span>
+                            {% endfor %}
+                        </div>
+                    </div>
                 </div>
-            {{ form.email.label }} {{ form.email() }}
-            {% for error in form.email.errors %}
-            <span class="alert alert-danger" role="alert">[{{ error }}]</span>
-            {% endfor %}
-        </div>  
-        <div class="line">
-            <div class="login-box">
-                <div class="login-text">パスワード</div>
+            </div>
+
+            <div class="form-section">
+                <h3 class="section-title">
+                    <span class="material-icons">email</span>
+                    アカウント情報
+                </h3>
+                
+                <div class="form-group">
+                    <div class="form-field">
+                        <label for="{{ form.email.id }}" class="form-label">
+                            <span class="material-icons">email</span>
+                            {{ form.email.label }}
+                        </label>
+                        {{ form.email(class="form-control", placeholder="メールアドレスを入力") }}
+                        {% for error in form.email.errors %}
+                            <span class="form-error">
+                                <span class="material-icons">error</span>
+                                {{ error }}
+                            </span>
+                        {% endfor %}
+                    </div>
                 </div>
-            {{ form.password.label }} {{ form.password() }}
-            {% for error in form.password.errors %}
-            <span class="alert alert-danger" role="alert">[{{ error }}]</span>
-            {% endfor %}
-            {{ form.confirm.label }} {{ form.confirm() }}
-            {% for error in form.confirm.errors %}
-            <span class="alert alert-danger" role="alert">[{{ error }}]</span>
-            {% endfor %}
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <div class="form-field">
+                            <label for="{{ form.password.id }}" class="form-label">
+                                <span class="material-icons">lock</span>
+                                {{ form.password.label }}
+                            </label>
+                            {{ form.password(class="form-control", placeholder="パスワードを入力") }}
+                            {% for error in form.password.errors %}
+                                <span class="form-error">
+                                    <span class="material-icons">error</span>
+                                    {{ error }}
+                                </span>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <div class="form-field">
+                            <label for="{{ form.confirm.id }}" class="form-label">
+                                <span class="material-icons">lock_reset</span>
+                                {{ form.confirm.label }}
+                            </label>
+                            {{ form.confirm(class="form-control", placeholder="パスワードを再入力") }}
+                            {% for error in form.confirm.errors %}
+                                <span class="form-error">
+                                    <span class="material-icons">error</span>
+                                    {{ error }}
+                                </span>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-section">
+                <h3 class="section-title">
+                    <span class="material-icons">verified</span>
+                    確認コード
+                </h3>
+                
+                <div class="form-group">
+                    <div class="form-field">
+                        <label for="{{ form.confirm_code.id }}" class="form-label">
+                            <span class="material-icons">security</span>
+                            {{ form.confirm_code.label }}
+                        </label>
+                        {{ form.confirm_code(class="form-control", placeholder="確認コードを入力") }}
+                        {% for error in form.confirm_code.errors %}
+                            <span class="form-error">
+                                <span class="material-icons">error</span>
+                                {{ error }}
+                            </span>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-actions">
+                <button type="submit" class="btn btn-primary btn-full">
+                    <span class="material-icons">person_add</span>
+                    アカウント作成
+                </button>
+            </div>
+        </form>
+
+        <div class="auth-footer">
+            <p>既にアカウントをお持ちの方は</p>
+            <a href="/login" class="btn btn-outline btn-full">
+                <span class="material-icons">login</span>
+                ログイン
+            </a>
         </div>
-        <div class="line">
-            <div class="login-box">
-                <div class="login-text">確認コード</div>
-                </div>
-            {{ form.confirm_code.label }} {{ form.confirm_code() }}
-            {% for error in form.confirm_code.errors %}
-            <span class="alert alert-danger" role="alert">[{{ error }}]</span>
-            {% endfor %}
-        </div>  
-        <div style="text-align: center;">
-        {{ form.submit() }}
-        </div>
-    </form>
+    </div>
 </div>
+
+<style>
+.auth-container {
+    min-height: calc(100vh - 64px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: var(--spacing-lg);
+    background: linear-gradient(135deg, var(--md-sys-color-primary-container) 0%, var(--md-sys-color-surface-container) 100%);
+}
+
+.auth-card {
+    background: var(--md-sys-color-surface-container);
+    border-radius: var(--border-radius-xl);
+    padding: var(--spacing-xxl);
+    box-shadow: var(--shadow-lg);
+    width: 100%;
+    max-width: 500px;
+    border: 1px solid var(--md-sys-color-outline);
+}
+
+.auth-header {
+    text-align: center;
+    margin-bottom: var(--spacing-xl);
+}
+
+.auth-icon {
+    width: 64px;
+    height: 64px;
+    background: var(--md-sys-color-primary-container);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto var(--spacing-md);
+}
+
+.auth-icon .material-icons {
+    font-size: 32px;
+    color: var(--md-sys-color-on-primary-container);
+}
+
+.auth-title {
+    font-size: 24px;
+    font-weight: 600;
+    color: var(--md-sys-color-on-surface);
+    margin-bottom: var(--spacing-sm);
+}
+
+.auth-subtitle {
+    color: var(--md-sys-color-on-surface-variant);
+    margin: 0;
+}
+
+.auth-form {
+    margin-bottom: var(--spacing-xl);
+}
+
+.form-section {
+    margin-bottom: var(--spacing-xl);
+    padding: var(--spacing-lg);
+    background: var(--md-sys-color-surface-container-low);
+    border-radius: var(--border-radius-lg);
+    border: 1px solid var(--md-sys-color-outline);
+}
+
+.section-title {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--md-sys-color-on-surface);
+    margin-bottom: var(--spacing-lg);
+    padding-bottom: var(--spacing-sm);
+    border-bottom: 1px solid var(--md-sys-color-outline);
+}
+
+.section-title .material-icons {
+    font-size: 20px;
+    color: var(--md-sys-color-primary);
+}
+
+.form-row {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: var(--spacing-md);
+}
+
+.form-group {
+    margin-bottom: var(--spacing-lg);
+}
+
+.form-field {
+    position: relative;
+}
+
+.form-label {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+    font-weight: 500;
+    color: var(--md-sys-color-on-surface);
+    margin-bottom: var(--spacing-sm);
+}
+
+.form-label .material-icons {
+    font-size: 18px;
+    color: var(--md-sys-color-primary);
+}
+
+.form-control {
+    width: 100%;
+    padding: var(--spacing-md);
+    border: 1px solid var(--md-sys-color-outline);
+    border-radius: var(--border-radius-md);
+    background: var(--md-sys-color-surface-container);
+    color: var(--md-sys-color-on-surface);
+    font-size: 16px;
+    transition: all var(--transition-fast);
+}
+
+.form-control:focus {
+    outline: none;
+    border-color: var(--md-sys-color-primary);
+    box-shadow: 0 0 0 2px var(--md-sys-color-primary-container);
+    background: var(--md-sys-color-surface-container-high);
+}
+
+.form-error {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-xs);
+    color: var(--md-sys-color-error);
+    font-size: 14px;
+    margin-top: var(--spacing-xs);
+}
+
+.form-error .material-icons {
+    font-size: 16px;
+}
+
+.form-actions {
+    margin-top: var(--spacing-xl);
+}
+
+.btn-full {
+    width: 100%;
+    justify-content: center;
+}
+
+.auth-footer {
+    text-align: center;
+    padding-top: var(--spacing-lg);
+    border-top: 1px solid var(--md-sys-color-outline);
+}
+
+.auth-footer p {
+    color: var(--md-sys-color-on-surface-variant);
+    margin-bottom: var(--spacing-md);
+}
+
+@media (max-width: 768px) {
+    .form-row {
+        grid-template-columns: 1fr;
+    }
+    
+    .auth-card {
+        padding: var(--spacing-lg);
+    }
+    
+    .auth-container {
+        padding: var(--spacing-md);
+    }
+}
+
+@media (max-width: 480px) {
+    .auth-card {
+        padding: var(--spacing-md);
+    }
+    
+    .form-section {
+        padding: var(--spacing-md);
+    }
+}
+</style>
 {% endblock %}

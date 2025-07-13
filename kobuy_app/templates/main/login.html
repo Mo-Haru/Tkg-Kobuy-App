@@ -1,53 +1,207 @@
 {% extends "layout.html" %}
 
 {% block content %}
+<div class="auth-container">
+    <div class="auth-card">
+        <div class="auth-header">
+            <div class="auth-icon">
+                <span class="material-icons">login</span>
+            </div>
+            <h1 class="auth-title">ログイン</h1>
+            <p class="auth-subtitle">アカウントにログインしてください</p>
+        </div>
 
+        <form method="POST" data-ajax="true" class="auth-form">
+            {{ form.csrf_token }}
+            
+            <div class="form-group">
+                <div class="form-field">
+                    <label for="{{ form.email.id }}" class="form-label">
+                        <span class="material-icons">email</span>
+                        {{ form.email.label }}
+                    </label>
+                    {{ form.email(class="form-control", placeholder="メールアドレスを入力") }}
+                    {% for error in form.email.errors %}
+                        <span class="form-error">
+                            <span class="material-icons">error</span>
+                            {{ error }}
+                        </span>
+                    {% endfor %}
+                </div>
+            </div>
 
+            <div class="form-group">
+                <div class="form-field">
+                    <label for="{{ form.password.id }}" class="form-label">
+                        <span class="material-icons">lock</span>
+                        {{ form.password.label }}
+                    </label>
+                    {{ form.password(class="form-control", placeholder="パスワードを入力") }}
+                    {% for error in form.password.errors %}
+                        <span class="form-error">
+                            <span class="material-icons">error</span>
+                            {{ error }}
+                        </span>
+                    {% endfor %}
+                </div>
+            </div>
 
-<div class="center">
-<h1>
-    login
-</h1>
-<form method="POST">
-    {{ form.csrf_token }}
-    <div class="line">
+            <div class="form-actions">
+                <button type="submit" class="btn btn-primary btn-full">
+                    <span class="material-icons">login</span>
+                    ログイン
+                </button>
+            </div>
+        </form>
 
-    <div class="login-box">
-    <div class="login-text">
-    {{ form.email.label }}
-    </div>
-    </div>
-    {{ form.email() }}
-    {% for error in form.email.errors %}
-    <span style="color: red;">[{{ error }}]</span>
-    {% endfor %}
-    </div>
-
-    <div class="line">
-    <div class="login-box">
-    <div class="login-text">
-    {{ form.password.label }}
-    </div>
-    </div>
-    {{ form.password() }}
-    {% for error in form.password.errors %}
-        <span style="color: red;">[{{ error }}]</span>
-    {% endfor %}
-    </div>
-
-    <br>
-
-    <div style="text-align: center;">
-    {{ form.submit() }}
-    </div>
-
-
-</form>
-    <div class="center-div">
-    <a href="/register">アカウントの新規作成</a>
+        <div class="auth-footer">
+            <p>アカウントをお持ちでない方は</p>
+            <a href="/register" class="btn btn-outline btn-full">
+                <span class="material-icons">person_add</span>
+                アカウントの新規作成
+            </a>
+        </div>
     </div>
 </div>
 
+<style>
+.auth-container {
+    min-height: calc(100vh - 64px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: var(--spacing-lg);
+    background: linear-gradient(135deg, var(--md-sys-color-primary-container) 0%, var(--md-sys-color-surface-container) 100%);
+}
 
+.auth-card {
+    background: var(--md-sys-color-surface-container);
+    border-radius: var(--border-radius-xl);
+    padding: var(--spacing-xxl);
+    box-shadow: var(--shadow-lg);
+    width: 100%;
+    max-width: 400px;
+    border: 1px solid var(--md-sys-color-outline);
+}
 
+.auth-header {
+    text-align: center;
+    margin-bottom: var(--spacing-xl);
+}
+
+.auth-icon {
+    width: 64px;
+    height: 64px;
+    background: var(--md-sys-color-primary-container);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto var(--spacing-md);
+}
+
+.auth-icon .material-icons {
+    font-size: 32px;
+    color: var(--md-sys-color-on-primary-container);
+}
+
+.auth-title {
+    font-size: 24px;
+    font-weight: 600;
+    color: var(--md-sys-color-on-surface);
+    margin-bottom: var(--spacing-sm);
+}
+
+.auth-subtitle {
+    color: var(--md-sys-color-on-surface-variant);
+    margin: 0;
+}
+
+.auth-form {
+    margin-bottom: var(--spacing-xl);
+}
+
+.form-group {
+    margin-bottom: var(--spacing-lg);
+}
+
+.form-field {
+    position: relative;
+}
+
+.form-label {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+    font-weight: 500;
+    color: var(--md-sys-color-on-surface);
+    margin-bottom: var(--spacing-sm);
+}
+
+.form-label .material-icons {
+    font-size: 18px;
+    color: var(--md-sys-color-primary);
+}
+
+.form-control {
+    width: 100%;
+    padding: var(--spacing-md);
+    border: 1px solid var(--md-sys-color-outline);
+    border-radius: var(--border-radius-md);
+    background: var(--md-sys-color-surface-container-low);
+    color: var(--md-sys-color-on-surface);
+    font-size: 16px;
+    transition: all var(--transition-fast);
+}
+
+.form-control:focus {
+    outline: none;
+    border-color: var(--md-sys-color-primary);
+    box-shadow: 0 0 0 2px var(--md-sys-color-primary-container);
+    background: var(--md-sys-color-surface-container);
+}
+
+.form-error {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-xs);
+    color: var(--md-sys-color-error);
+    font-size: 14px;
+    margin-top: var(--spacing-xs);
+}
+
+.form-error .material-icons {
+    font-size: 16px;
+}
+
+.form-actions {
+    margin-top: var(--spacing-xl);
+}
+
+.btn-full {
+    width: 100%;
+    justify-content: center;
+}
+
+.auth-footer {
+    text-align: center;
+    padding-top: var(--spacing-lg);
+    border-top: 1px solid var(--md-sys-color-outline);
+}
+
+.auth-footer p {
+    color: var(--md-sys-color-on-surface-variant);
+    margin-bottom: var(--spacing-md);
+}
+
+@media (max-width: 480px) {
+    .auth-card {
+        padding: var(--spacing-lg);
+    }
+    
+    .auth-container {
+        padding: var(--spacing-md);
+    }
+}
+</style>
 {% endblock %}

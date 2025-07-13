@@ -1,50 +1,715 @@
 {% extends "layout.html" %}
+
 {% block header %}
-
-        <span class="r_h_title">
-            / メニュー
-        </span>
+<span class="page-title">
+    <span class="material-icons">restaurant_menu</span>
+    メニュー
+</span>
 {% endblock %}
-{% block content %}
 
-<div class="r_cards">
-    {% for menu_item in menu_items %}
-    <div class="r_i_card" data-id="{{ menu_item.id }}" style="width: 300px;">
-        <div class="r_i_img">
-            {% if menu_item.product_image %}
-            <a href="/menu/{{ menu_item.id }}">
-            <img src="{{ url_for('static', filename=menu_item.product_image) }}" alt="{{ menu_item.productname }}の画像" width="100%" height="100%">
-            </a>
-            {% else %}
-            {{ menu_item.productname }}の商品画像が存在しないか、読み込むことができませんでした。
-            {% endif %}
+{% block content %}
+<div class="menu-container fade-in">
+    <!-- Header Section -->
+    <section class="menu-header">
+        <div class="header-content">
+            <h1 class="page-heading">商品メニュー</h1>
+            <p class="page-description">
+                学校売店の商品一覧です。お気に入りの商品を見つけて、簡単に予約できます。
+            </p>
         </div>
-        <div class="r_i_text">
-            <span class="r_i_name bold">{{ menu_item.productname }}</span>
-            <span class="r_i_price" id="r_i_price_{{ menu_item.id }}">{{ menu_item.price }}円</span>
+        
+        <!-- Search and Filter -->
+        <div class="filter-section">
+            <div class="search-box">
+                <span class="material-icons search-icon">search</span>
+                <input type="text" id="menuSearch" placeholder="商品名で検索..." class="search-input">
+            </div>
+            <div class="filter-buttons">
+                <button type="button" id="filterAll" class="filter-btn active" data-filter="all">
+                    <span class="material-icons">apps</span>
+                    <span class="filter-text">すべて</span>
+                </button>
+                <button type="button" id="filterAvailable" class="filter-btn" data-filter="available">
+                    <span class="material-icons">inventory</span>
+                    <span class="filter-text">在庫あり</span>
+                </button>
+                <button type="button" id="filterPopular" class="filter-btn" data-filter="popular">
+                    <span class="material-icons">trending_up</span>
+                    <span class="filter-text">人気商品</span>
+                </button>
+            </div>
         </div>
-        <div class="m_i_ex" style="width: 200px; padding: 5px;">
-          <div class="m_i_ext bold" style="text-align: center;">商品説明</div><br>
-          <p>{{ menu_item.explanation }}</p>
+    </section>
+
+    <!-- Menu Grid -->
+    <section class="menu-grid-section">
+        <div class="menu-grid" id="menuGrid">
+            {% for menu_item in menu_items %}
+            <div class="menu-card" data-id="{{ menu_item.id }}" data-name="{{ menu_item.productname | lower }}" data-price="{{ menu_item.price }}" data-stock="{{ menu_item.stock.today_stock if menu_item.stock else 0 }}">
+                <!-- Card Image -->
+                <div class="card-image-container">
+                    {% if menu_item.product_image %}
+                        <img src="{{ url_for('static', filename=menu_item.product_image) }}" 
+                             alt="{{ menu_item.productname }}" 
+                             class="card-image"
+                             loading="lazy">
+                    {% else %}
+                        <div class="no-image-placeholder">
+                            <span class="material-icons">restaurant</span>
+                        </div>
+                    {% endif %}
+                    
+                    <!-- Stock Badge -->
+                    {% if menu_item.stock and menu_item.stock.today_stock > 0 %}
+                        <div class="stock-badge available">
+                            <span class="material-icons">inventory</span>
+                            在庫あり
+                        </div>
+                    {% else %}
+                        <div class="stock-badge unavailable">
+                            <span class="material-icons">inventory_2</span>
+                            売り切れ
+                        </div>
+                    {% endif %}
+                    
+                    <!-- Popular Badge -->
+                    {% if menu_item.buy_cnt > 10 %}
+                        <div class="popular-badge">
+                            <span class="material-icons">trending_up</span>
+                            人気
+                        </div>
+                    {% endif %}
+                </div>
+
+                <!-- Card Content -->
+                <div class="card-content">
+                    <div class="card-header">
+                        <h3 class="card-title">{{ menu_item.productname }}</h3>
+                        <div class="card-price">{{ menu_item.price }}円</div>
+                    </div>
+                    
+                    <div class="card-description">
+                        <p>{{ menu_item.explanation or '商品の詳細説明がありません。' }}</p>
+                    </div>
+                    
+                    <div class="card-footer">
+                        <div class="card-stats">
+                            <div class="stat-item">
+                                <span class="material-icons stat-icon">shopping_cart</span>
+                                <span class="stat-text">{{ menu_item.buy_cnt }}回購入</span>
+                            </div>
+                            {% if menu_item.stock %}
+                            <div class="stat-item">
+                                <span class="material-icons stat-icon">inventory</span>
+                                <span class="stat-text">{{ menu_item.stock.today_stock }}個在庫</span>
+                            </div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="card-actions">
+                            <md-filled-button href="/menu/{{ menu_item.id }}" class="action-btn primary">
+                                <span slot="icon" class="material-icons">visibility</span>
+                                詳細を見る
+                            </md-filled-button>
+                            
+                            {% if menu_item.stock and menu_item.stock.today_stock > 0 %}
+                                <md-outlined-button href="/reserve/item/{{ menu_item.id }}" class="action-btn secondary">
+                                    <span slot="icon" class="material-icons">add_shopping_cart</span>
+                                    予約する
+                                </md-outlined-button>
+                            {% else %}
+                                <md-outlined-button disabled class="action-btn secondary">
+                                    <span slot="icon" class="material-icons">block</span>
+                                    在庫切れ
+                                </md-outlined-button>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
         </div>
-        <div>
-            <md-filled-button href="/menu/{{ menu_item.id }}">
-                商品の詳細/予約              
-                <span slot="icon" class="material-icons head_icon" viewBox="0 0 48 48">info</span>
+        
+        <!-- Empty State -->
+        <div class="empty-state" id="emptyState" style="display: none;">
+            <span class="material-icons empty-icon">search_off</span>
+            <h3>商品が見つかりません</h3>
+            <p>検索条件を変更してお試しください。</p>
+            <md-filled-button onclick="clearFilters()" class="clear-btn">
+                <span slot="icon" class="material-icons">refresh</span>
+                フィルターをクリア
             </md-filled-button>
-            <!-- <md-filled-button href="/reserve?highlight={{ menu_item.id }}">
-                <span>予約する</span>
-                <span slot="icon" class="material-icons head_icon" viewBox="0 0 48 48">shopping_cart</span>
-            </md-filled-button> -->
         </div>
-    </div>
-    {% endfor %}
+    </section>
 </div>
 
 <style>
-.bold{
-    font-weight: bold;
+/* Menu Container */
+.menu-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: var(--spacing-lg);
+}
+
+/* Menu Header */
+.menu-header {
+    margin-bottom: var(--spacing-xl);
+}
+
+.header-content {
+    text-align: center;
+    margin-bottom: var(--spacing-xl);
+}
+
+.page-heading {
+    font-size: 2.5rem;
+    font-weight: 700;
+    color: var(--md-sys-color-on-surface);
+    margin-bottom: var(--spacing-md);
+}
+
+.page-description {
+    font-size: 1.1rem;
+    color: var(--md-sys-color-on-surface-variant);
+    max-width: 600px;
+    margin: 0 auto;
+}
+
+/* Filter Section */
+.filter-section {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-lg);
+    align-items: center;
+}
+
+.search-box {
+    position: relative;
+    width: 100%;
+    max-width: 400px;
+}
+
+.search-icon {
+    position: absolute;
+    left: var(--spacing-md);
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--md-sys-color-on-surface-variant);
+}
+
+.search-input {
+    width: 100%;
+    padding: var(--spacing-md) var(--spacing-md) var(--spacing-md) calc(var(--spacing-md) * 2 + 24px);
+    border: 1px solid var(--md-sys-color-outline);
+    border-radius: var(--border-radius-lg);
+    background: var(--md-sys-color-surface-container-low);
+    color: var(--md-sys-color-on-surface);
+    font-size: 1rem;
+    transition: all var(--transition-fast);
+}
+
+.search-input:focus {
+    outline: none;
+    border-color: var(--md-sys-color-primary);
+    box-shadow: 0 0 0 2px var(--md-sys-color-primary-container);
+}
+
+.filter-buttons {
+    display: flex;
+    gap: var(--spacing-sm);
+    flex-wrap: wrap;
+    justify-content: center;
+}
+
+.filter-btn {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-xs);
+    padding: var(--spacing-sm) var(--spacing-md);
+    border: 1px solid var(--md-sys-color-outline);
+    border-radius: var(--border-radius-md);
+    background: var(--md-sys-color-surface-container);
+    color: var(--md-sys-color-on-surface);
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all var(--transition-fast);
+    min-width: 120px;
+    justify-content: center;
+    position: relative;
+    overflow: hidden;
+}
+
+.filter-btn:hover {
+    background: var(--md-sys-color-surface-container-high);
+    border-color: var(--md-sys-color-outline-variant);
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-sm);
+}
+
+.filter-btn:active {
+    transform: translateY(0);
+    box-shadow: var(--shadow-sm);
+}
+
+.filter-btn.active {
+    background: var(--md-sys-color-primary);
+    color: var(--md-sys-color-on-primary);
+    border-color: var(--md-sys-color-primary);
+    box-shadow: var(--shadow-md);
+}
+
+.filter-btn.active:hover {
+    background: var(--md-sys-color-primary-fixed-dim);
+    box-shadow: var(--shadow-lg);
+}
+
+.filter-btn .material-icons {
+    font-size: 18px;
+    width: 18px;
+    height: 18px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.filter-text {
+    font-weight: 500;
+    white-space: nowrap;
+}
+
+/* Menu Grid */
+.menu-grid-section {
+    margin-top: var(--spacing-xl);
+}
+
+.menu-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: var(--spacing-lg);
+    margin-bottom: var(--spacing-xl);
+}
+
+/* Large screens (1200px and up) */
+@media (min-width: 1200px) {
+    .menu-grid {
+        grid-template-columns: repeat(4, 1fr);
+        gap: var(--spacing-xl);
+    }
+}
+
+/* Medium-large screens (992px to 1199px) */
+@media (min-width: 992px) and (max-width: 1199px) {
+    .menu-grid {
+        grid-template-columns: repeat(3, 1fr);
+        gap: var(--spacing-lg);
+    }
+}
+
+/* Medium screens (768px to 991px) */
+@media (min-width: 768px) and (max-width: 991px) {
+    .menu-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: var(--spacing-md);
+    }
+}
+
+/* Menu Card */
+.menu-card {
+    background: var(--md-sys-color-surface-container);
+    border-radius: var(--border-radius-lg);
+    border: 1px solid var(--md-sys-color-outline);
+    overflow: hidden;
+    transition: all var(--transition-fast);
+    position: relative;
+}
+
+.menu-card:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--shadow-lg);
+}
+
+.card-image-container {
+    position: relative;
+    height: 200px;
+    overflow: hidden;
+}
+
+.card-image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform var(--transition-fast);
+}
+
+.menu-card:hover .card-image {
+    transform: scale(1.05);
+}
+
+.no-image-placeholder {
+    width: 100%;
+    height: 100%;
+    background: var(--md-sys-color-surface-variant);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--md-sys-color-on-surface-variant);
+}
+
+.no-image-placeholder .material-icons {
+    font-size: 3rem;
+}
+
+/* Badges */
+.stock-badge, .popular-badge {
+    position: absolute;
+    top: var(--spacing-sm);
+    padding: var(--spacing-xs) var(--spacing-sm);
+    border-radius: var(--border-radius-md);
+    font-size: 0.8rem;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-xs);
+    backdrop-filter: blur(10px);
+}
+
+.stock-badge {
+    right: var(--spacing-sm);
+}
+
+.stock-badge.available {
+    background: rgba(76, 175, 80, 0.9);
+    color: white;
+}
+
+.stock-badge.unavailable {
+    background: rgba(244, 67, 54, 0.9);
+    color: white;
+}
+
+.popular-badge {
+    left: var(--spacing-sm);
+    background: rgba(255, 193, 7, 0.9);
+    color: #333;
+}
+
+/* Card Content */
+.card-content {
+    padding: var(--spacing-lg);
+}
+
+.card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: var(--spacing-md);
+}
+
+.card-title {
+    font-size: 1.2rem;
+    font-weight: 600;
+    color: var(--md-sys-color-on-surface);
+    margin: 0;
+    flex: 1;
+    margin-right: var(--spacing-sm);
+}
+
+.card-price {
+    font-size: 1.3rem;
+    font-weight: 700;
+    color: var(--md-sys-color-primary);
+    white-space: nowrap;
+}
+
+.card-description {
+    margin-bottom: var(--spacing-lg);
+}
+
+.card-description p {
+    color: var(--md-sys-color-on-surface-variant);
+    line-height: 1.5;
+    margin: 0;
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+/* Card Footer */
+.card-footer {
+    border-top: 1px solid var(--md-sys-color-outline);
+    padding-top: var(--spacing-md);
+}
+
+.card-stats {
+    display: flex;
+    gap: var(--spacing-md);
+    margin-bottom: var(--spacing-md);
+    flex-wrap: wrap;
+}
+
+.stat-item {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-xs);
+    color: var(--md-sys-color-on-surface-variant);
+    font-size: 0.9rem;
+}
+
+.stat-icon {
+    font-size: 1rem;
+}
+
+.card-actions {
+    display: flex;
+    gap: var(--spacing-sm);
+    flex-wrap: wrap;
+}
+
+.action-btn {
+    flex: 1;
+    min-width: 120px;
+}
+
+/* Empty State */
+.empty-state {
+    text-align: center;
+    padding: var(--spacing-xxl);
+    color: var(--md-sys-color-on-surface-variant);
+}
+
+.empty-icon {
+    font-size: 4rem;
+    color: var(--md-sys-color-outline);
+    margin-bottom: var(--spacing-lg);
+}
+
+.empty-state h3 {
+    margin-bottom: var(--spacing-md);
+    color: var(--md-sys-color-on-surface);
+}
+
+.empty-state p {
+    margin-bottom: var(--spacing-lg);
+}
+
+.clear-btn {
+    min-width: 200px;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .menu-container {
+        padding: var(--spacing-md);
+    }
+    
+    .page-heading {
+        font-size: 2rem;
+    }
+    
+    .menu-grid {
+        grid-template-columns: 1fr;
+        gap: var(--spacing-md);
+    }
+    
+    .menu-card {
+        max-width: 400px;
+        margin: 0 auto;
+    }
+    
+    .filter-buttons {
+        flex-direction: column;
+        width: 100%;
+        max-width: 300px;
+        gap: var(--spacing-sm);
+    }
+    
+    .filter-btn {
+        width: 100%;
+        justify-content: center;
+        padding: var(--spacing-md);
+    }
+    
+    .card-actions {
+        flex-direction: column;
+    }
+}
+
+@media (max-width: 480px) {
+    .page-heading {
+        font-size: 1.5rem;
+    }
+    
+    .menu-grid {
+        gap: var(--spacing-sm);
+    }
+    
+    .menu-card {
+        max-width: 100%;
+    }
+    
+    .card-content {
+        padding: var(--spacing-md);
+    }
+    
+    .card-title {
+        font-size: 16px;
+    }
+    
+    .card-price {
+        font-size: 18px;
+    }
+    
+    .card-header {
+        flex-direction: column;
+        gap: var(--spacing-sm);
+    }
+    
+    .card-stats {
+        flex-direction: column;
+        gap: var(--spacing-sm);
+    }
+    
+    .filter-btn {
+        min-width: auto;
+        padding: var(--spacing-sm) var(--spacing-md);
+    }
+    
+    .filter-text {
+        font-size: 13px;
+    }
 }
 </style>
 
+<script>
+// Search and Filter Functionality with Ajax
+document.addEventListener('DOMContentLoaded', function() {
+    const searchInput = document.getElementById('menuSearch');
+    const filterButtons = document.querySelectorAll('.filter-btn');
+    const menuCards = document.querySelectorAll('.menu-card');
+    const emptyState = document.getElementById('emptyState');
+    const menuGrid = document.getElementById('menuGrid');
+    
+    let currentFilter = 'all';
+    let searchTimeout;
+    
+    // Prevent navigation animation on filter changes
+    const preventNavigationAnimation = () => {
+        if (window.KobuyApp && window.KobuyApp.Navigation) {
+            window.KobuyApp.Navigation.preventAnimation = true;
+            setTimeout(() => {
+                window.KobuyApp.Navigation.preventAnimation = false;
+            }, 100);
+        }
+    };
+    
+    // Search functionality with debouncing
+    searchInput.addEventListener('input', function() {
+        clearTimeout(searchTimeout);
+        searchTimeout = setTimeout(() => {
+            preventNavigationAnimation();
+            filterMenu();
+        }, 300);
+    });
+    
+    // Filter button functionality
+    filterButtons.forEach(button => {
+        button.addEventListener('click', function(e) {
+            e.preventDefault();
+            
+            // Prevent navigation animation
+            preventNavigationAnimation();
+            
+            // Remove active class from all buttons
+            filterButtons.forEach(btn => btn.classList.remove('active'));
+            // Add active class to clicked button
+            this.classList.add('active');
+            
+            // Update current filter using data-filter attribute
+            currentFilter = this.dataset.filter;
+            
+            filterMenu();
+        });
+    });
+    
+    function filterMenu() {
+        const searchTerm = searchInput.value.toLowerCase();
+        let visibleCount = 0;
+        
+        // Add loading state
+        menuGrid.style.opacity = '0.7';
+        
+        // Use requestAnimationFrame for smooth filtering
+        requestAnimationFrame(() => {
+            menuCards.forEach(card => {
+                const name = card.dataset.name;
+                const stock = parseInt(card.dataset.stock);
+                const buyCountElement = card.querySelector('.stat-text');
+                const buyCount = buyCountElement ? parseInt(buyCountElement.textContent.match(/\d+/)[0]) : 0;
+                
+                let showCard = true;
+                
+                // Search filter
+                if (searchTerm && !name.includes(searchTerm)) {
+                    showCard = false;
+                }
+                
+                // Category filter
+                if (currentFilter === 'available' && stock <= 0) {
+                    showCard = false;
+                } else if (currentFilter === 'popular' && buyCount <= 10) {
+                    showCard = false;
+                }
+                
+                if (showCard) {
+                    card.style.display = 'block';
+                    card.style.opacity = '0';
+                    setTimeout(() => {
+                        card.style.opacity = '1';
+                    }, 50);
+                    visibleCount++;
+                } else {
+                    card.style.display = 'none';
+                }
+            });
+            
+            // Show/hide empty state
+            if (visibleCount === 0) {
+                menuGrid.style.display = 'none';
+                emptyState.style.display = 'block';
+                emptyState.style.opacity = '0';
+                setTimeout(() => {
+                    emptyState.style.opacity = '1';
+                }, 100);
+            } else {
+                menuGrid.style.display = 'grid';
+                emptyState.style.display = 'none';
+            }
+            
+            // Restore opacity
+            setTimeout(() => {
+                menuGrid.style.opacity = '1';
+            }, 200);
+        });
+    }
+    
+    // Clear filters function
+    window.clearFilters = function() {
+        preventNavigationAnimation();
+        searchInput.value = '';
+        filterButtons.forEach(btn => btn.classList.remove('active'));
+        document.getElementById('filterAll').classList.add('active');
+        currentFilter = 'all';
+        filterMenu();
+    };
+    
+    // Initialize with smooth transitions
+    menuCards.forEach(card => {
+        card.style.transition = 'opacity 0.3s ease, transform 0.3s ease';
+    });
+    
+    emptyState.style.transition = 'opacity 0.3s ease';
+});
+</script>
 {% endblock %}

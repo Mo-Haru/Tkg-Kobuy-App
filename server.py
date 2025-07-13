@@ -6,7 +6,7 @@ app = create_app()
 
 if __name__ == '__main__':
     if create_db == 0:
-        app.run(threaded=True)
+        app.run(host="0.0.0.0",port="80", threaded=True)
         # サーバー上で動かすときはhost="0.0.0.0",port="80", threaded=True
         
     if create_db == 1:

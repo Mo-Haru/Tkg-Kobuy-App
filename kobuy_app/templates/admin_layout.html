@@ -2,8 +2,10 @@
 <html lang="ja">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
     <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='css/adminstyle.css') }}" />
     <link rel="preconnect" href="https://fonts.googleapis.com">    
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
@@ -26,114 +28,286 @@
     <title>{{ data.webtitle }}</title>
 </head>
 <body class="noto-sans-jp-regular">
-    <header style="z-index: 100;">
-        <div class="header_webtitle">購買予約アプリ For 管理者</div>
-        {% if current_user.is_authenticated %}
-        <div class="header_btn_group">
-          <md-filled-tonal-button href="/">
-            <span class="head_profile">予約アプリに戻る</span>
-            <span slot="icon" class="material-icons head_icon" viewBox="0 0 48 48">arrow_back</span>
-          </md-filled-tonal-button>
-          <span style="position: relative">
-            <md-filled-tonal-button id="usage-anchor">
-              <span class="head_profile">{{ data.current_user_lastname }} {{ data.current_user_firstname }}</span>
-              <span slot="icon" class="material-icons head_icon" viewBox="0 0 48 48">account_circle</span>
-            </md-filled-tonal-button>
-            <md-menu id="usage-menu" anchor="usage-anchor">
-              <md-menu-item><a class="header_a" href="/profile" tabindex="-1">
-                <div slot="headline">profile</div>
-              </a></md-menu-item>
-              <md-menu-item><a class="header_a" href="/logout" tabindex="-1">
-                <div slot="headline">logout</div>
-              </a></md-menu-item>
-              <!-- <md-menu-item>
-                <div slot="headline">a</div>
-              </md-menu-item> -->
-            </md-menu>
-          </span>
+    <!-- Header -->
+    <header class="admin-header">
+        <div class="header-container">
+            <div class="header-brand">
+                <div class="header-title">
+                    <span class="material-icons brand-icon">admin_panel_settings</span>
+                    <span class="brand-text">購買予約アプリ For 管理者</span>
+                </div>
+            </div>
+            
+            <div class="header-actions">
+                {% if current_user.is_authenticated %}
+                    <md-filled-tonal-button href="/" class="header-btn">
+                        <span slot="icon" class="material-icons">arrow_back</span>
+                        <span class="btn-text">予約アプリに戻る</span>
+                    </md-filled-tonal-button>
+                    
+                    <div class="user-menu">
+                        <md-filled-tonal-icon-button id="user-menu-anchor" class="user-menu-toggle" aria-label="ユーザーメニュー">
+                            <span class="material-icons">account_circle</span>
+                        </md-filled-tonal-icon-button>
+                        
+                        <md-menu id="user-menu" anchor="user-menu-anchor">
+                            <md-menu-item href="/profile">
+                                <div slot="headline">
+                                    <span class="material-icons">person</span>
+                                    プロフィール
+                                </div>
+                            </md-menu-item>
+                            
+                            <md-menu-item href="/logout">
+                                <div slot="headline">
+                                    <span class="material-icons">logout</span>
+                                    ログアウト
+                                </div>
+                            </md-menu-item>
+                        </md-menu>
+                    </div>
+                {% endif %}
+            </div>
         </div>
-        {% endif %}
     </header>
-    <nav class="navigation" id="navigation">
-        <md-icon-button class="Toggle_button" id="navi_toggle_button">
-          <span class="navi_icon"><div class="material-symbols-rounded">menu</div></span>
-        </md-icon-button>
-        <div class="fab_speace"></div>
-        <ul>
-            <li class="navi_list {% if request.path == '/admin' %}active{% endif %}" id="navi_list_home">
-              <a class="navi_atag" href="/admin">
-                    <span class="navi_icon"><div class="material-symbols-rounded {% if request.path == '/admin' %}material-symbols-rounded-fill {% endif %}">home</div></span>
-                    <span class="navi_title" id="navi_title_name_home">ホーム</span>
-            </a></li>
-            <div class="navi_speace"></div>
-            <li class="navi_list {% if request.path == '/admin/reserve_list' %}active{% endif %}" id="navi_list_reserve">
-              <a class="navi_atag" href="/admin/reserve_list">
-                    <span class="navi_icon"><div class="material-symbols-rounded {% if request.path == '/admin/reserve_list' %}material-symbols-rounded-fill {% endif %}">user_attributes</div></span>
-                    <span class="navi_title" id="navi_title_name_reserve">予約者</span>
-            </a></li>
-            <div class="navi_speace"></div>
-            <li class="navi_list {% if request.path == '/admin/menu/edit' %}active{% endif %}" id="navi_list_menuedit">
-                <a class="navi_atag" href="/admin/menu/edit">
-                    <span class="navi_icon"><div class="material-symbols-rounded {% if request.path == '/admin/menu/edit' %}material-symbols-rounded-fill {% endif %}">menu_book</div></span>
-                    <span class="navi_title" id="navi_title_name_menuedit">Menu編集</span>
-            </a></li>
-            <div class="navi_speace"></div>
-            <li class="navi_list {% if request.path == '/admin/menu/stock' %}active{% endif %}" id="navi_list_stock">
-                <a class="navi_atag" href="/admin/menu/stock">
-                    <span class="navi_icon"><div class="material-symbols-rounded {% if request.path == '/admin/menu/stock' %}material-symbols-rounded-fill {% endif %}">stack</div></span>
-                    <span class="navi_title" id="navi_title_name_menu_stock">在庫</span>
-            </a></li>
-            <div class="navi_speace"></div>
-            <li class="navi_list {% if request.path == '/admin/option' %}active{% endif %}" id="navi_list_option">
-                <a class="navi_atag" href="/admin/option">
-                    <span class="navi_icon"><div class="material-symbols-rounded {% if request.path == '/admin/option' %}material-symbols-rounded-fill {% endif %}">settings</div></span>
-                    <span class="navi_title" id="navi_title_name_sale_option">販売設定</span>
-            </a></li>
-            <div class="navi_speace"></div>
-            <li class="navi_list {% if request.path == '/admin/contact_list' %}active{% endif %}" id="navi_list_menuedit">
-                <a class="navi_atag" href="/admin/contact_list">
-                    <span class="navi_icon"><div class="material-symbols-rounded {% if request.path == '/admin/contact_list' %}material-symbols-rounded-fill {% endif %}">mail</div></span>
-                    <span class="navi_title" id="navi_title_name_contact">お問い合わせ</span>
-            </a></li>
+    
+    <!-- Navigation -->
+    <nav class="admin-navigation" id="adminNavigation" aria-label="管理者ナビゲーション">
+        <div class="nav-header">
+            <button class="mobile-nav-item nav-toggle" id="navToggle" aria-label="ナビゲーションを切り替え">
+                <span class="material-icons" id="navToggleIcon">menu</span>
+                <span class="mobile-nav-label" id="navToggleLabel" style="display:none;">閉じる</span>
+            </button>
+        </div>
+        
+        <ul class="nav-list">
+            <li class="nav-item {% if request.path == '/admin' %}active{% endif %}">
+                <a class="nav-link" href="/admin" aria-label="ホーム">
+                    <span class="nav-icon">
+                        <span class="material-icons">home</span>
+                    </span>
+                    <span class="nav-text">ホーム</span>
+                </a>
+            </li>
+            
+            <li class="nav-item {% if request.path == '/admin/reserve_list' %}active{% endif %}">
+                <a class="nav-link" href="/admin/reserve_list" aria-label="予約者一覧">
+                    <span class="nav-icon">
+                        <span class="material-icons">people</span>
+                    </span>
+                    <span class="nav-text">予約者</span>
+                </a>
+            </li>
+            
+            <li class="nav-item {% if request.path == '/admin/menu/edit' %}active{% endif %}">
+                <a class="nav-link" href="/admin/menu/edit" aria-label="メニュー編集">
+                    <span class="nav-icon">
+                        <span class="material-icons">menu_book</span>
+                    </span>
+                    <span class="nav-text">Menu編集</span>
+                </a>
+            </li>
+            
+            <li class="nav-item {% if request.path == '/admin/menu/stock' %}active{% endif %}">
+                <a class="nav-link" href="/admin/menu/stock" aria-label="在庫管理">
+                    <span class="nav-icon">
+                        <span class="material-icons">inventory</span>
+                    </span>
+                    <span class="nav-text">在庫</span>
+                </a>
+            </li>
+            
+            <li class="nav-item {% if request.path == '/admin/option' %}active{% endif %}">
+                <a class="nav-link" href="/admin/option" aria-label="販売設定">
+                    <span class="nav-icon">
+                        <span class="material-icons">settings</span>
+                    </span>
+                    <span class="nav-text">販売設定</span>
+                </a>
+            </li>
+            
+            <li class="nav-item {% if request.path == '/admin/contact_list' %}active{% endif %}">
+                <a class="nav-link" href="/admin/contact_list" aria-label="お問い合わせ一覧">
+                    <span class="nav-icon">
+                        <span class="material-icons">mail</span>
+                    </span>
+                    <span class="nav-text">お問い合わせ</span>
+                </a>
+            </li>
+            
+            <li class="nav-item {% if request.path == '/admin/statistics' %}active{% endif %}">
+                <a class="nav-link" href="/admin/statistics" aria-label="統計情報">
+                    <span class="nav-icon">
+                        <span class="material-icons">analytics</span>
+                    </span>
+                    <span class="nav-text">統計情報</span>
+                </a>
+            </li>
         </ul>
     </nav>
-    <div class="main" id="main_body">
-      <!-- エラー -->
-      {% with messages = get_flashed_messages(category_filter=["error"]) %}
-      {% if messages %}
-      {% for message in messages %}
-        <div class="alert alert-danger" role="alert">{{ message }}</div>
-      {% endfor %}
-      {% endif %}
-      {% endwith %}
-      <!-- 成功 -->
-      {% with messages = get_flashed_messages(category_filter=["success"]) %}
-      {% if messages %}
-      {% for message in messages %}
-        <div class="alert alert-success" role="alert">{{ message }}</div>
-      {% endfor %}
-      {% endif %}
-      {% endwith %}
-      <!-- 警告 -->
-      {% with messages = get_flashed_messages(category_filter=["warning"]) %}
-      {% if messages %}
-      {% for message in messages %}
-        <div class="alert alert-warning" role="alert">{{ message }}</div>
-      {% endfor %}
-      {% endif %}
-      {% endwith %}
-      <!-- 情報 -->
-      {% with messages = get_flashed_messages(category_filter=["info"]) %}
-      {% if messages %}
-      {% for message in messages %}
-        <div class="alert alert-info" role="alert">{{ message }}</div>
-      {% endfor %}
-      {% endif %}
-      {% endwith %}
-    {% block content %}
-    {% endblock %}
+    
+    <!-- Main Content -->
+    <main class="admin-main" id="main-content">
+        <!-- Flash Messages -->
+        <div class="flash-messages" id="flashMessages" aria-live="polite">
+            {% with messages = get_flashed_messages(category_filter=["error"]) %}
+            {% if messages %}
+            {% for message in messages %}
+                <div class="alert alert-danger" role="alert">
+                    <span class="material-icons">error</span>
+                    <span class="alert-text">{{ message }}</span>
+                    <button type="button" class="alert-close" aria-label="アラートを閉じる">
+                        <span class="material-icons">close</span>
+                    </button>
+                </div>
+            {% endfor %}
+            {% endif %}
+            {% endwith %}
+            
+            {% with messages = get_flashed_messages(category_filter=["success"]) %}
+            {% if messages %}
+            {% for message in messages %}
+                <div class="alert alert-success" role="alert">
+                    <span class="material-icons">check_circle</span>
+                    <span class="alert-text">{{ message }}</span>
+                    <button type="button" class="alert-close" aria-label="アラートを閉じる">
+                        <span class="material-icons">close</span>
+                    </button>
+                </div>
+            {% endfor %}
+            {% endif %}
+            {% endwith %}
+            
+            {% with messages = get_flashed_messages(category_filter=["warning"]) %}
+            {% if messages %}
+            {% for message in messages %}
+                <div class="alert alert-warning" role="alert">
+                    <span class="material-icons">warning</span>
+                    <span class="alert-text">{{ message }}</span>
+                    <button type="button" class="alert-close" aria-label="アラートを閉じる">
+                        <span class="material-icons">close</span>
+                    </button>
+                </div>
+            {% endfor %}
+            {% endif %}
+            {% endwith %}
+            
+            {% with messages = get_flashed_messages(category_filter=["info"]) %}
+            {% if messages %}
+            {% for message in messages %}
+                <div class="alert alert-info" role="alert">
+                    <span class="material-icons">info</span>
+                    <span class="alert-text">{{ message }}</span>
+                    <button type="button" class="alert-close" aria-label="アラートを閉じる">
+                        <span class="material-icons">close</span>
+                    </button>
+                </div>
+            {% endfor %}
+            {% endif %}
+            {% endwith %}
+        </div>
+        
+        <!-- Page Content -->
+        <div class="page-content">
+            {% block content %}
+            {% endblock %}
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="admin-footer">
+        <div class="footer-content">
+            <p class="footer-text">&copy; 2024 購買予約アプリ 管理者画面. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <!-- Mobile Bottom Navigation -->
+    <nav class="mobile-bottom-nav" id="mobileBottomNav" aria-label="モバイルナビゲーション">
+        <a href="/admin" class="mobile-nav-item {% if request.path == '/admin' %}active{% endif %}" aria-label="ホーム">
+            <span class="material-icons">home</span>
+            <span class="mobile-nav-label">ホーム</span>
+        </a>
+        <a href="/admin/reserve_list" class="mobile-nav-item {% if request.path == '/admin/reserve_list' %}active{% endif %}" aria-label="予約者">
+            <span class="material-icons">people</span>
+            <span class="mobile-nav-label">予約者</span>
+        </a>
+        <a href="/admin/menu/edit" class="mobile-nav-item {% if request.path == '/admin/menu/edit' %}active{% endif %}" aria-label="Menu編集">
+            <span class="material-icons">menu_book</span>
+            <span class="mobile-nav-label">Menu編集</span>
+        </a>
+        <a href="/admin/menu/stock" class="mobile-nav-item {% if request.path == '/admin/menu/stock' %}active{% endif %}" aria-label="在庫">
+            <span class="material-icons">inventory</span>
+            <span class="mobile-nav-label">在庫</span>
+        </a>
+        <a href="/admin/option" class="mobile-nav-item {% if request.path == '/admin/option' %}active{% endif %}" aria-label="設定">
+            <span class="material-icons">settings</span>
+            <span class="mobile-nav-label">設定</span>
+        </a>
+    </nav>
+
+    <!-- Product Detail Modal -->
+    <div id="productDetailModal" class="modal" role="dialog" aria-labelledby="productModalTitle" aria-hidden="true">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title" id="productModalTitle">商品詳細</h3>
+                <button class="modal-close" onclick="modalManager.hide('productDetailModal')" aria-label="モーダルを閉じる">
+                    <span class="material-icons">close</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <!-- Content will be loaded dynamically -->
+            </div>
+            <div class="modal-footer">
+                <md-filled-tonal-button onclick="modalManager.hide('productDetailModal')">
+                    <span slot="icon" class="material-icons">close</span>
+                    閉じる
+                </md-filled-tonal-button>
+            </div>
+        </div>
     </div>
+
+    <!-- Reservation Detail Modal -->
+    <div id="reservationDetailModal" class="modal" role="dialog" aria-labelledby="reservationModalTitle" aria-hidden="true">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title" id="reservationModalTitle">予約詳細</h3>
+                <button class="modal-close" onclick="modalManager.hide('reservationDetailModal')" aria-label="モーダルを閉じる">
+                    <span class="material-icons">close</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <!-- Content will be loaded dynamically -->
+            </div>
+            <div class="modal-footer">
+                <md-filled-tonal-button onclick="modalManager.hide('reservationDetailModal')">
+                    <span slot="icon" class="material-icons">close</span>
+                    閉じる
+                </md-filled-tonal-button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Contact Detail Modal -->
+    <div id="contactDetailModal" class="modal" role="dialog" aria-labelledby="contactModalTitle" aria-hidden="true">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title" id="contactModalTitle">お問い合わせ詳細</h3>
+                <button class="modal-close" onclick="modalManager.hide('contactDetailModal')" aria-label="モーダルを閉じる">
+                    <span class="material-icons">close</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <!-- Content will be loaded dynamically -->
+            </div>
+            <div class="modal-footer">
+                <md-filled-tonal-button onclick="modalManager.hide('contactDetailModal')">
+                    <span slot="icon" class="material-icons">close</span>
+                    閉じる
+                </md-filled-tonal-button>
+            </div>
+        </div>
+    </div>
+
     <script type="text/javascript" src="{{ url_for('static', filename='javascript/admin-js.js') }}"></script>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM" crossorigin="anonymous"></script>
 </body>
 </html>

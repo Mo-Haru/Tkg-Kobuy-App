@@ -1,11 +1,14 @@
 from kobuy_app import app, db, admin_required, login_required, rule_required
-from flask import render_template,  request, redirect, send_from_directory, url_for, flash, Blueprint, abort, session
-from kobuy_app.models.models import Agreement, Menu, User, Notification, Reserved, Contact, Stock, Sale_state, Menu_category
+from flask import render_template,  request, redirect, send_from_directory, url_for, flash, Blueprint, abort, session, jsonify
+from kobuy_app.models.models import Agreement, Menu, User, Notification, Reserved, Contact, Stock, Sale_state, Menu_category, PushSubscription, AppNotification
 from kobuy_app.forms import LoginForm, RegisterForm, ReserveForm, MenueditForm, MenudeleteForm, MenucreateForm, ContactForm
 from flask_login import login_user, logout_user, current_user
 from datetime import datetime
 from werkzeug.utils import secure_filename
 import os
+import json
+from pywebpush import webpush, WebPushException
+import base64
 
 main = Blueprint('main', __name__)
 
@@ -48,7 +51,7 @@ def file_upload(img) -> str:
     """
     if img is None:
         print("画像がアップロードされていません")
-        return None  # 画像がアップロードされていない場合
+        return ""  # 画像がアップロードされていない場合
     
     filename = secure_filename(img.data.filename)
     if filename is not None:
@@ -134,7 +137,224 @@ def reserve_items(request):
     flash("現在予約可能時間でないため予約することができません", "error")
     return redirect(url_for("reserve"))
 
+# Ajax対応のエンドポイント
+@app.route('/api/login', methods=['POST'])
+def api_login():
+    """Ajax用ログインエンドポイント"""
+    try:
+        data = request.get_json()
+        email = data.get('email')
+        password = data.get('password')
+        
+        if not email or not password:
+            return jsonify({
+                'success': False,
+                'message': 'メールアドレスとパスワードを入力してください'
+            }), 400
+        
+        user = User.query.filter_by(email=email).first()
+        if user and user.check_password(password):
+            login_user(user)
+            return jsonify({
+                'success': True,
+                'message': 'ログインが完了しました',
+                'redirect': url_for('index')
+            })
+        else:
+            return jsonify({
+                'success': False,
+                'message': 'メールアドレスまたはパスワードが正しくありません'
+            }), 401
+            
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'message': 'エラーが発生しました'
+        }), 500
 
+@app.route('/api/register', methods=['POST'])
+def api_register():
+    """Ajax用アカウント作成エンドポイント"""
+    try:
+        data = request.get_json()
+        con_code = "12345678"
+        
+        # バリデーション
+        if data.get('confirm_code') != con_code:
+            return jsonify({
+                'success': False,
+                'message': '確認コードが正しくありません'
+            }), 400
+        
+        if data.get('password') != data.get('confirm'):
+            return jsonify({
+                'success': False,
+                'message': 'パスワードが一致しません'
+            }), 400
+        
+        # データの取得と変換
+        lastname = data.get('lastname')
+        firstname = data.get('firstname')
+        grade = data.get('grade')
+        cls = data.get('cls')
+        num = data.get('num')
+        email = data.get('email')
+        
+        # 必須フィールドのチェック
+        if not all([lastname, firstname, grade, cls, num, email]):
+            return jsonify({
+                'success': False,
+                'message': '必須項目が入力されていません'
+            }), 400
+        
+        # ユーザー作成
+        user = User()
+        user.lastname = lastname
+        user.firstname = firstname
+        user.grade = int(grade)
+        user.cls = int(cls)
+        user.num = int(num)
+        user.email = email
+        user.set_password(data.get('password'))
+        
+        db.session.add(user)
+        db.session.commit()
+        
+        return jsonify({
+            'success': True,
+            'message': 'アカウントが作成されました',
+            'redirect': url_for('login')
+        })
+        
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({
+            'success': False,
+            'message': 'エラーが発生しました'
+        }), 500
+
+@app.route('/api/menu/search')
+def api_menu_search():
+    """Ajax用メニュー検索エンドポイント"""
+    try:
+        query = request.args.get('q', '')
+        category = request.args.get('category', 'all')
+        
+        menu_query = Menu.query
+        
+        if query:
+            menu_query = menu_query.filter(
+                Menu.productname.contains(query)
+            )
+        
+        if category != 'all':
+            menu_query = menu_query.filter_by(category=category)
+        
+        menus = menu_query.all()
+        
+        # HTMLレスポンスを生成
+        html = render_template('partials/menu_items.html', menus=menus)
+        
+        return html
+        
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'message': '検索中にエラーが発生しました'
+        }), 500
+
+@app.route('/api/reserve', methods=['POST'])
+@login_required
+def api_reserve():
+    """Ajax用予約エンドポイント"""
+    try:
+        data = request.get_json()
+        items = data.get('items', [])
+        
+        if not items:
+            return jsonify({
+                'success': False,
+                'message': '商品が選択されていません'
+            }), 400
+        
+        # 在庫チェック
+        for item in items:
+            stock = Stock.query.filter_by(id=item['id']).first()
+            if not stock or stock.today_stock is None or stock.today_stock < item['quantity']:
+                return jsonify({
+                    'success': False,
+                    'message': f'商品ID {item["id"]} の在庫が不足しています'
+                }), 400
+        
+        # 予約処理
+        item_slot = []
+        for item in items:
+            for _ in range(item['quantity']):
+                item_slot.append(item['id'])
+        
+        # 5個までに調整
+        while len(item_slot) < 5:
+            item_slot.append(None)
+        item_slot = item_slot[:5]
+        
+        # 在庫を減らす
+        for item_id in item_slot:
+            if item_id:
+                stock = Stock.query.filter_by(id=item_id).first()
+                stock.today_stock -= 1
+                Menu.query.filter_by(id=item_id).first().buy_cnt += 1
+        
+        # 予約を作成
+        reserve = Reserved(
+            user_id=current_user.id,
+            product_id_0=item_slot[0],
+            product_id_1=item_slot[1],
+            product_id_2=item_slot[2],
+            product_id_3=item_slot[3],
+            product_id_4=item_slot[4],
+            reserve_day=Reserved.current_date(),
+            reserve_time=Reserved.current_time(),
+            price=Reserved.price_sum(item_slot[0], item_slot[1], item_slot[2], item_slot[3], item_slot[4]),
+            state="予約済み"
+        )
+        
+        db.session.add(reserve)
+        db.session.commit()
+        
+        return jsonify({
+            'success': True,
+            'message': '予約が完了しました',
+            'redirect': url_for('reserve_done')
+        })
+        
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({
+            'success': False,
+            'message': '予約中にエラーが発生しました'
+        }), 500
+
+@app.route('/api/stock/<int:menu_id>', methods=['GET'])
+def api_stock(menu_id):
+    """Ajax用在庫確認エンドポイント"""
+    try:
+        stock = Stock.query.filter_by(id=menu_id).first()
+        if stock:
+            return jsonify({
+                'success': True,
+                'stock': stock.today_stock
+            })
+        else:
+            return jsonify({
+                'success': False,
+                'message': '商品が見つかりません'
+            }), 404
+            
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'message': 'エラーが発生しました'
+        }), 500
 
 @app.route('/')
 def index():
@@ -155,12 +375,15 @@ def index():
         reserve_items = None
     return render_template('main/index.html', data = data, f_items = f_items, reserve_items = reserve_items, menus = menu)
 
-
-
 @app.route("/login", methods=['GET', 'POST'])
 def login():
     data = current_webdata("ログイン")  # ページデータの取得
     form = LoginForm()  # ログインフォームの初期化
+    
+    # Ajaxリクエストの場合はJSONレスポンス
+    if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+        return api_login()
+    
     if form.validate_on_submit():  # フォームの送信後にバデーションをチェック
         user = User.query.filter_by(email=form.email.data).first()  # ユーザー情報の取得
         if user and user.check_password(form.password.data):  # ユーザー確認とパスワード検証
@@ -176,13 +399,16 @@ def login():
     
     return render_template('main/login.html', form=form, data=data)  # ログインページを表示
 
-
-
 @app.route("/register", methods=["GET", "POST"])
 def register():
     data = current_webdata("ユーザー登録")
     form = RegisterForm()
     con_code = "12345678"
+    
+    # Ajaxリクエストの場合はJSONレスポンス
+    if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+        return api_register()
+    
     if request.method == 'POST' and form.validate():
         print(form.confirm_code.data)
         if form.confirm_code.data == con_code:
@@ -642,10 +868,23 @@ def help():
 @app.route("/admin")
 @login_required
 @admin_required
-def adminmain():
-    data = current_webdata("管理トップページ")
-    return render_template("admin/adminmain.html", data = data)
-
+def admin():
+    data = current_webdata("管理者ページ")
+    
+    # 統計情報を取得
+    user_count = User.query.count()
+    today_reservations = Reserved.query.filter_by(reserve_day=Reserved.current_date()).count()
+    menu_count = Menu.query.count()
+    pending_reservations = Reserved.query.filter_by(state="予約済み").count()
+    users = User.query.all()
+    
+    return render_template("admin/adminmain.html", 
+                         data=data, 
+                         user_count=user_count,
+                         today_reservations=today_reservations,
+                         menu_count=menu_count,
+                         pending_reservations=pending_reservations,
+                         users=users)
 
 # 予約者リスト
 @app.route("/admin/reserve_list")
@@ -655,7 +894,12 @@ def reserve_list():
     data = current_webdata("予約者リスト")
     allday = True
     reserve = Reserved.query.order_by(Reserved.id.desc()).all()
-    return render_template("admin/reserve_list.html", reserve=reserve, allday=allday, data = data)
+    
+    # AJAXリクエストの場合は部分的なコンテンツのみを返す
+    if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+        return render_template("admin/reserve_list.html", reserve=reserve, allday=allday, data=data)
+    
+    return render_template("admin/reserve_list.html", reserve=reserve, allday=allday, data=data)
 
 
 
@@ -698,7 +942,39 @@ def reserve_s_rdy(reserve_id):
     reserve_edit = Reserved.query.filter_by(id=reserve_id).first()
     reserve_edit.state = "準備完了"
     db.session.commit()
+    
+    # 通知を送信
+    send_reservation_status_notification(reserve_id, "準備完了")
+    
     flash(f"{reserve_id}は準備完了に変更されました", "success")
+    return redirect(url_for("reserve_list"))
+
+@app.route("/admin/reserve/state_completed/<int:reserve_id>" , methods = ["POST", "GET"])
+@login_required
+@admin_required
+def reserve_s_completed(reserve_id):
+    reserve_edit = Reserved.query.filter_by(id=reserve_id).first()
+    reserve_edit.state = "受取済み"
+    db.session.commit()
+    
+    # 通知を送信
+    send_reservation_status_notification(reserve_id, "受取済み")
+    
+    flash(f"{reserve_id}は受取済みに変更されました", "success")
+    return redirect(url_for("reserve_list"))
+
+@app.route("/admin/reserve/state_cancelled/<int:reserve_id>" , methods = ["POST", "GET"])
+@login_required
+@admin_required
+def reserve_s_cancelled(reserve_id):
+    reserve_edit = Reserved.query.filter_by(id=reserve_id).first()
+    reserve_edit.state = "キャンセル"
+    db.session.commit()
+    
+    # 通知を送信
+    send_reservation_status_notification(reserve_id, "キャンセル")
+    
+    flash(f"{reserve_id}はキャンセルに変更されました", "success")
     return redirect(url_for("reserve_list"))
 
 
@@ -735,7 +1011,12 @@ def menu_edit():
     menu=Menu.query.order_by(Menu.orders).all()
     stock = Stock.query.all()
     menu_categorys = Menu_category.query.all()
-    return render_template("admin/menu_main_edit.html", menu=menu, data = data, stock=stock, menu_categorys = menu_categorys)
+    
+    # AJAXリクエストの場合は部分的なコンテンツのみを返す
+    if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+        return render_template("admin/menu_main_edit.html", menu=menu, data=data, stock=stock, menu_categorys=menu_categorys)
+    
+    return render_template("admin/menu_main_edit.html", menu=menu, data=data, stock=stock, menu_categorys=menu_categorys)
 
 
 @app.route("/admin/menu/up/<int:menu_id>")
@@ -1151,3 +1432,490 @@ def contact_detail(contact_id):
     data = current_webdata("お問い合わせ詳細")
     contact = Contact.query.filter_by(id = contact_id).first()
     return render_template("admin/contact_list_detail.html", data = data, contact = contact)
+
+# Admin Ajax API Endpoints
+@app.route("/api/admin/product/<int:product_id>")
+@login_required
+@admin_required
+def admin_product_detail(product_id):
+    if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+        try:
+            menu = Menu.query.get_or_404(product_id)
+            stock = Stock.query.get(product_id)
+            category = Menu_category.query.get(menu.category_id) if menu.category_id else None
+            
+            return jsonify({
+                'success': True,
+                'product': {
+                    'id': menu.id,
+                    'name': menu.productname,
+                    'price': menu.price,
+                    'description': menu.explanation,
+                    'image': url_for('static', filename=menu.product_image) if menu.product_image else None,
+                    'sales': menu.buy_cnt,
+                    'order': menu.order
+                },
+                'stock': {
+                    'current': stock.today_stock if stock else 0,
+                    'limit': stock.today_stock_limit if stock else 0
+                },
+                'category': {
+                    'name': category.category if category else '未分類'
+                }
+            })
+        except Exception as e:
+            return jsonify({'success': False, 'message': str(e)}), 500
+    return jsonify({'success': False, 'message': 'Invalid request'}), 400
+
+@app.route("/api/admin/product/<int:product_id>", methods=['DELETE'])
+@login_required
+@admin_required
+def admin_delete_product(product_id):
+    if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+        try:
+            menu = Menu.query.get_or_404(product_id)
+            db.session.delete(menu)
+            db.session.commit()
+            return jsonify({'success': True, 'message': '商品を削除しました'})
+        except Exception as e:
+            return jsonify({'success': False, 'message': str(e)}), 500
+    return jsonify({'success': False, 'message': 'Invalid request'}), 400
+
+@app.route("/api/admin/reservation/<int:reservation_id>")
+@login_required
+@admin_required
+def admin_reservation_detail(reservation_id):
+    if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+        try:
+            reservation = Reserved.query.get_or_404(reservation_id)
+            user = reservation.user
+            
+            return jsonify({
+                'success': True,
+                'reservation': {
+                    'id': reservation.id,
+                    'date': reservation.reserve_day,
+                    'time': reservation.reserve_time,
+                    'total': reservation.price,
+                    'status': reservation.state,
+                    'product_0': {
+                        'name': reservation.menu_item_0.productname,
+                        'price': reservation.menu_item_0.price
+                    } if reservation.menu_item_0 else None,
+                    'product_1': {
+                        'name': reservation.menu_item_1.productname,
+                        'price': reservation.menu_item_1.price
+                    } if reservation.menu_item_1 else None,
+                    'product_2': {
+                        'name': reservation.menu_item_2.productname,
+                        'price': reservation.menu_item_2.price
+                    } if reservation.menu_item_2 else None,
+                    'product_3': {
+                        'name': reservation.menu_item_3.productname,
+                        'price': reservation.menu_item_3.price
+                    } if reservation.menu_item_3 else None,
+                    'product_4': {
+                        'name': reservation.menu_item_4.productname,
+                        'price': reservation.menu_item_4.price
+                    } if reservation.menu_item_4 else None
+                },
+                'user': {
+                    'grade': user.grade,
+                    'cls': user.cls,
+                    'num': user.num,
+                    'lastname': user.lastname,
+                    'firstname': user.firstname
+                }
+            })
+        except Exception as e:
+            return jsonify({'success': False, 'message': str(e)}), 500
+    return jsonify({'success': False, 'message': 'Invalid request'}), 400
+
+@app.route("/api/admin/reservation/<int:reservation_id>/status", methods=['POST'])
+@login_required
+@admin_required
+def admin_update_reservation_status(reservation_id):
+    if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+        try:
+            data = request.get_json()
+            status = data.get('status')
+            
+            reservation = Reserved.query.get_or_404(reservation_id)
+            
+            if status == 'ready':
+                reservation.state = "準備完了"
+            elif status == 'completed':
+                reservation.state = "受取済み"
+            elif status == 'cancelled':
+                reservation.state = "キャンセル"
+            else:
+                return jsonify({'success': False, 'message': '無効なステータスです'}), 400
+            
+            db.session.commit()
+            return jsonify({'success': True, 'message': 'ステータスを更新しました'})
+        except Exception as e:
+            return jsonify({'success': False, 'message': str(e)}), 500
+    return jsonify({'success': False, 'message': 'Invalid request'}), 400
+
+@app.route("/api/admin/stock/<int:product_id>/<action>", methods=['POST'])
+@login_required
+@admin_required
+def admin_update_stock(product_id, action):
+    if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+        try:
+            stock = Stock.query.get_or_404(product_id)
+            
+            if action == 'increase':
+                if stock.today_stock < stock.today_stock_limit:
+                    stock.today_stock += 1
+                else:
+                    return jsonify({'success': False, 'message': '在庫上限に達しています'}), 400
+            elif action == 'decrease':
+                if stock.today_stock > 0:
+                    stock.today_stock -= 1
+                else:
+                    return jsonify({'success': False, 'message': '在庫が0です'}), 400
+            else:
+                return jsonify({'success': False, 'message': '無効な操作です'}), 400
+            
+            db.session.commit()
+            return jsonify({
+                'success': True, 
+                'message': '在庫を更新しました',
+                'newStock': stock.today_stock
+            })
+        except Exception as e:
+            return jsonify({'success': False, 'message': str(e)}), 500
+    return jsonify({'success': False, 'message': 'Invalid request'}), 400
+
+@app.route("/api/admin/contact/<int:contact_id>")
+@login_required
+@admin_required
+def admin_contact_detail(contact_id):
+    if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+        try:
+            contact = Contact.query.get_or_404(contact_id)
+            user = contact.user
+            
+            return jsonify({
+                'success': True,
+                'contact': {
+                    'id': contact.id,
+                    'title': contact.title,
+                    'content': contact.content,
+                    'date': contact.contact_day,
+                    'time': contact.contact_time
+                },
+                'user': {
+                    'lastname': user.lastname,
+                    'firstname': user.firstname,
+                    'email': user.email
+                }
+            })
+        except Exception as e:
+            return jsonify({'success': False, 'message': str(e)}), 500
+    return jsonify({'success': False, 'message': 'Invalid request'}), 400
+
+@app.route("/admin/statistics")
+@login_required
+@admin_required
+def admin_statistics():
+    data = current_webdata("統計情報")
+    
+    # 統計データを取得
+    total_users = User.query.count()
+    total_reservations = Reserved.query.count()
+    total_products = Menu.query.count()
+    
+    # 今日の予約数
+    today = datetime.now().date()
+    today_reservations = Reserved.query.filter(
+        Reserved.reserve_day == today
+    ).count()
+    
+    # 今月の予約数
+    current_month = datetime.now().month
+    current_year = datetime.now().year
+    month_reservations = Reserved.query.filter(
+        db.extract('month', Reserved.reserve_day) == current_month,
+        db.extract('year', Reserved.reserve_day) == current_year
+    ).count()
+    
+    # 人気商品トップ5
+    popular_products = Menu.query.order_by(Menu.buy_cnt.desc()).limit(5).all()
+    
+    # 予約状態の統計
+    status_stats = db.session.query(
+        Reserved.state,
+        db.func.count(Reserved.id)
+    ).group_by(Reserved.state).all()
+    
+    # 売上統計
+    total_sales = db.session.query(db.func.sum(Reserved.price)).scalar() or 0
+    today_sales = db.session.query(db.func.sum(Reserved.price)).filter(
+        Reserved.reserve_day == today
+    ).scalar() or 0
+    
+    # AJAXリクエストの場合は部分的なコンテンツのみを返す
+    if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+        return render_template(
+            "admin/statistics.html",
+            data=data,
+            total_users=total_users,
+            total_reservations=total_reservations,
+            total_products=total_products,
+            today_reservations=today_reservations,
+            month_reservations=month_reservations,
+            popular_products=popular_products,
+            status_stats=status_stats,
+            total_sales=total_sales,
+            today_sales=today_sales
+        )
+    
+    return render_template(
+        "admin/statistics.html",
+        data=data,
+        total_users=total_users,
+        total_reservations=total_reservations,
+        total_products=total_products,
+        today_reservations=today_reservations,
+        month_reservations=month_reservations,
+        popular_products=popular_products,
+        status_stats=status_stats,
+        total_sales=total_sales,
+        today_sales=today_sales
+    )
+
+# 通知機能
+def send_push_notification(user_id, title, message, data=None):
+    """プッシュ通知を送信する"""
+    try:
+        subscriptions = PushSubscription.query.filter_by(user_id=user_id).all()
+        
+        for subscription in subscriptions:
+            try:
+                webpush(
+                    subscription_info={
+                        "endpoint": subscription.endpoint,
+                        "keys": {
+                            "p256dh": subscription.p256dh,
+                            "auth": subscription.auth
+                        }
+                    },
+                    data=json.dumps({
+                        "title": title,
+                        "message": message,
+                        "data": data or {}
+                    }),
+                    vapid_private_key=app.config.get('VAPID_PRIVATE_KEY'),
+                    vapid_claims={
+                        "sub": "mailto:admin@kobuy-app.com"
+                    }
+                )
+            except WebPushException as e:
+                print(f"Push notification failed: {e}")
+                # 失敗したサブスクリプションを削除
+                db.session.delete(subscription)
+        
+        db.session.commit()
+        return True
+    except Exception as e:
+        print(f"Error sending push notification: {e}")
+        return False
+
+def create_app_notification(user_id, title, message, notification_type='info', reservation_id=None):
+    """アプリ内通知を作成する"""
+    try:
+        notification = AppNotification(
+            user_id=user_id,
+            title=title,
+            message=message,
+            type=notification_type,
+            related_reservation_id=reservation_id
+        )
+        db.session.add(notification)
+        db.session.commit()
+        return notification
+    except Exception as e:
+        print(f"Error creating app notification: {e}")
+        return None
+
+@app.route('/api/push/subscribe', methods=['POST'])
+@login_required
+def subscribe_push():
+    """プッシュ通知のサブスクリプションを登録する"""
+    try:
+        data = request.get_json()
+        subscription_info = data.get('subscription')
+        
+        if not subscription_info:
+            return jsonify({'success': False, 'message': 'Subscription info is required'}), 400
+        
+        # 既存のサブスクリプションを削除
+        PushSubscription.query.filter_by(user_id=current_user.id).delete()
+        
+        # 新しいサブスクリプションを作成
+        subscription = PushSubscription(
+            user_id=current_user.id,
+            endpoint=subscription_info['endpoint'],
+            p256dh=subscription_info['keys']['p256dh'],
+            auth=subscription_info['keys']['auth']
+        )
+        
+        db.session.add(subscription)
+        db.session.commit()
+        
+        return jsonify({'success': True, 'message': 'Subscription registered successfully'})
+    except Exception as e:
+        return jsonify({'success': False, 'message': str(e)}), 500
+
+@app.route('/api/notifications', methods=['GET'])
+@login_required
+def get_notifications():
+    """ユーザーの通知一覧を取得する"""
+    try:
+        notifications = AppNotification.query.filter_by(user_id=current_user.id).order_by(AppNotification.created_at.desc()).limit(20).all()
+        
+        notifications_data = []
+        for notification in notifications:
+            notifications_data.append({
+                'id': notification.id,
+                'title': notification.title,
+                'message': notification.message,
+                'type': notification.type,
+                'is_read': notification.is_read,
+                'created_at': notification.created_at.strftime('%Y-%m-%d %H:%M'),
+                'reservation_id': notification.related_reservation_id
+            })
+        
+        return jsonify({'success': True, 'notifications': notifications_data})
+    except Exception as e:
+        return jsonify({'success': False, 'message': str(e)}), 500
+
+@app.route('/api/notifications/<int:notification_id>/read', methods=['POST'])
+@login_required
+def mark_notification_read(notification_id):
+    """通知を既読にする"""
+    try:
+        notification = AppNotification.query.filter_by(id=notification_id, user_id=current_user.id).first()
+        
+        if not notification:
+            return jsonify({'success': False, 'message': 'Notification not found'}), 404
+        
+        notification.is_read = True
+        db.session.commit()
+        
+        return jsonify({'success': True, 'message': 'Notification marked as read'})
+    except Exception as e:
+        return jsonify({'success': False, 'message': str(e)}), 500
+
+@app.route('/api/notifications/read-all', methods=['POST'])
+@login_required
+def mark_all_notifications_read():
+    """すべての通知を既読にする"""
+    try:
+        AppNotification.query.filter_by(user_id=current_user.id, is_read=False).update({'is_read': True})
+        db.session.commit()
+        
+        return jsonify({'success': True, 'message': 'All notifications marked as read'})
+    except Exception as e:
+        return jsonify({'success': False, 'message': str(e)}), 500
+
+# 管理者用通知送信API
+@app.route('/admin/send-notification', methods=['POST'])
+@login_required
+@admin_required
+def send_notification():
+    """管理者が通知を送信する"""
+    try:
+        data = request.get_json()
+        title = data.get('title')
+        message = data.get('message')
+        notification_type = data.get('type', 'info')
+        user_ids = data.get('user_ids', [])  # 空の場合は全ユーザー
+        
+        if not title or not message:
+            return jsonify({'success': False, 'message': 'Title and message are required'}), 400
+        
+        # 対象ユーザーを取得
+        if user_ids:
+            users = User.query.filter(User.id.in_(user_ids)).all()
+        else:
+            users = User.query.all()
+        
+        success_count = 0
+        for user in users:
+            # アプリ内通知を作成
+            app_notification = create_app_notification(
+                user.id, title, message, notification_type
+            )
+            
+            # プッシュ通知を送信
+            push_success = send_push_notification(user.id, title, message)
+            
+            if app_notification or push_success:
+                success_count += 1
+        
+        return jsonify({
+            'success': True, 
+            'message': f'Notification sent to {success_count} users'
+        })
+    except Exception as e:
+        return jsonify({'success': False, 'message': str(e)}), 500
+
+# 予約状態変更時の通知送信
+def send_reservation_status_notification(reservation_id, new_status):
+    """予約状態変更時に通知を送信する"""
+    try:
+        reservation = Reserved.query.get(reservation_id)
+        if not reservation:
+            return False
+        
+        user = User.query.get(reservation.user_id)
+        if not user:
+            return False
+        
+        status_messages = {
+            '準備完了': {
+                'title': '商品の準備が完了しました',
+                'message': f'予約番号#{reservation.id}の商品の準備が完了しました。昼休み中に購買部でお受け取りください。',
+                'type': 'success'
+            },
+            '受取済み': {
+                'title': '商品を受け取りました',
+                'message': f'予約番号#{reservation.id}の商品を受け取りました。ご利用ありがとうございました。',
+                'type': 'info'
+            },
+            'キャンセル': {
+                'title': '予約がキャンセルされました',
+                'message': f'予約番号#{reservation.id}がキャンセルされました。',
+                'type': 'warning'
+            }
+        }
+        
+        if new_status in status_messages:
+            message_data = status_messages[new_status]
+            
+            # アプリ内通知を作成
+            create_app_notification(
+                user.id,
+                message_data['title'],
+                message_data['message'],
+                message_data['type'],
+                reservation.id
+            )
+            
+            # プッシュ通知を送信
+            send_push_notification(
+                user.id,
+                message_data['title'],
+                message_data['message'],
+                {'reservation_id': reservation.id, 'status': new_status}
+            )
+            
+            return True
+        
+        return False
+    except Exception as e:
+        print(f"Error sending reservation status notification: {e}")
+        return False

@@ -1,215 +1,610 @@
 {% extends "layout.html" %}
 
 {% block content %}
-<div style="padding: 20px;">
-
-    <h1>購買予約アプリへようこそ{% if current_user.is_authenticated %}、{{ data.current_user_lastname }} {{ data.current_user_firstname }}さん!{% endif %}</h1>
-
-    <div class="i" style="display: flex; height: auto; width: 100%; margin-top: 20px;">
-
-        <!-- メニューランキング -->
-        <div class="i_m" style="flex: 1; padding: 20px; margin-right: 15px; background-color: var(--md-sys-color-background); border-radius: 20px;">
-            <div class="i_m_title">メニューランキング</div>
-            <div class="i_m_content" style="font-size: large;">
-                {% if f_items.f_item_1 != None and f_items.f_item_2 != None and f_items.f_item_3 != None %}
-                    <div class="i_m_cs">
-                        {% if f_items.f_item_1 != None %}
-                        <a href="/menu/{{ f_items.f_item_1.id }}" class="ranking_item">
-                            <img src="{{ url_for('static', filename=f_items.f_item_1.product_image) }}" alt="" class="ranking_img">
-                            <div class="ranking_text">
-                                <p>１位：{{ f_items.f_item_1.productname }}</p>
-                            </div>
-                        </a>
-                        {% else %}
-                        <p>情報を取得できませんでした</p>
-                        {% endif %}
-                        
-                    </div>
-
-                    <div class="i_m_cs">
-                        {% if f_items.f_item_2 != None %}
-                        <a href="/menu/{{ f_items.f_item_2.id }}" class="ranking_item">
-                            <img src="{{ url_for('static', filename=f_items.f_item_2.product_image) }}" alt="" class="ranking_img">
-                            <div class="ranking_text">
-                                <p>２位：{{ f_items.f_item_2.productname }}</p>
-                            </div>
-                        </a>
-                        {% else %}
-                        <p>情報を取得できませんでした</p>
-                        {% endif %}
-                        
-                    </div>
-
-                    <div class="i_m_cs">
-                        {% if f_items.f_item_3 != None %}
-                        <a href="/menu/{{ f_items.f_item_3.id }}" class="ranking_item">
-                            <img src="{{ url_for('static', filename=f_items.f_item_3.product_image) }}" alt="" class="ranking_img">
-                            <div class="ranking_text">
-                                <p>３位：{{ f_items.f_item_3.productname }}</p>
-                            </div>
-                        </a>
-                        {% else %}
-                        <p>情報を取得できませんでした</p>
-                        {% endif %}
-                    </div>
-                {% else %}
-                    <p>情報を取得できませんでした</p>
-                {% endif %}
-            </div>
-        </div>
-
-        <!-- 予約履歴 -->
-        <div class="sidebar" style="flex: 1; padding: 20px; background-color: var(--md-sys-color-background); border-radius: 20px;">
-            <div class="i_s_title">予約履歴</div>
-            <div class="i_s_content">
-                {% if current_user.is_anonymous %}
-                    <p>ログインすると予約履歴が表示されます</p>
-                {% endif %}
-
+<div class="home-container fade-in">
+    <!-- Hero Section -->
+    <section class="hero-section">
+        <div class="hero-content">
+            <h1 class="hero-title">
+                購買予約アプリへようこそ
                 {% if current_user.is_authenticated %}
-                    {% if reserve_items == None %}
-                        <p>最近の予約は存在しません</p>
-                    {% else %}
-                        <div class="reservation_details">
-                            <p class="reservation_date"><strong>予約日:</strong> {{ reserve_items.reserve_day }}</p><br>
-                            <p class="reservation_price"><strong>合計金額:</strong> {{ reserve_items.price }}円</p><br>
-                            <p class="reservation_state"><strong>注文の状態:</strong> {{ reserve_items.state }}</p><br>
-                                
+                    <span class="hero-subtitle">、{{ data.current_user_lastname }} {{ data.current_user_firstname }}さん!</span>
+                {% endif %}
+            </h1>
+            <p class="hero-description">
+                学校の売店の商品を簡単に予約して、時間を節約しましょう。
+                最新のメニューと在庫状況をリアルタイムで確認できます。
+            </p>
+            {% if current_user.is_anonymous %}
+                <div class="hero-actions">
+                    <md-filled-button href="/register" class="hero-btn primary">
+                        <span slot="icon" class="material-icons">person_add</span>
+                        アカウント作成
+                    </md-filled-button>
+                    <md-outlined-button href="/login" class="hero-btn secondary">
+                        <span slot="icon" class="material-icons">login</span>
+                        ログイン
+                    </md-outlined-button>
+                </div>
+            {% endif %}
+        </div>
+    </section>
 
-                            <div class="reserved_items">
-                                <p><strong>予約した商品:</strong></p>
-                                <ul>
-                                    <!-- 予約された商品1 -->
+    <!-- Main Content Grid -->
+    <div class="content-grid">
+        <!-- Menu Ranking Section -->
+        <section class="ranking-section card">
+            <div class="card-header">
+                <h2 class="section-title">
+                    <span class="material-icons">trending_up</span>
+                    人気メニューランキング
+                </h2>
+            </div>
+            <div class="card-body">
+                <div class="ranking-list">
+                    {% if f_items.f_item_1 != None and f_items.f_item_2 != None and f_items.f_item_3 != None %}
+                        <div class="ranking-item">
+                            <div class="ranking-number">1</div>
+                            <a href="/menu/{{ f_items.f_item_1.id }}" class="ranking-link">
+                                <img src="{{ url_for('static', filename=f_items.f_item_1.product_image) }}" 
+                                     alt="{{ f_items.f_item_1.productname }}" 
+                                     class="ranking-image">
+                                <div class="ranking-info">
+                                    <h3 class="ranking-name">{{ f_items.f_item_1.productname }}</h3>
+                                    <p class="ranking-price">{{ f_items.f_item_1.price }}円</p>
+                                </div>
+                            </a>
+                        </div>
+
+                        <div class="ranking-item">
+                            <div class="ranking-number">2</div>
+                            <a href="/menu/{{ f_items.f_item_2.id }}" class="ranking-link">
+                                <img src="{{ url_for('static', filename=f_items.f_item_2.product_image) }}" 
+                                     alt="{{ f_items.f_item_2.productname }}" 
+                                     class="ranking-image">
+                                <div class="ranking-info">
+                                    <h3 class="ranking-name">{{ f_items.f_item_2.productname }}</h3>
+                                    <p class="ranking-price">{{ f_items.f_item_2.price }}円</p>
+                                </div>
+                            </a>
+                        </div>
+
+                        <div class="ranking-item">
+                            <div class="ranking-number">3</div>
+                            <a href="/menu/{{ f_items.f_item_3.id }}" class="ranking-link">
+                                <img src="{{ url_for('static', filename=f_items.f_item_3.product_image) }}" 
+                                     alt="{{ f_items.f_item_3.productname }}" 
+                                     class="ranking-image">
+                                <div class="ranking-info">
+                                    <h3 class="ranking-name">{{ f_items.f_item_3.productname }}</h3>
+                                    <p class="ranking-price">{{ f_items.f_item_3.price }}円</p>
+                                </div>
+                            </a>
+                        </div>
+                    {% else %}
+                        <div class="empty-state">
+                            <span class="material-icons empty-icon">restaurant_menu</span>
+                            <p>まだランキングデータがありません</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </section>
+
+        <!-- Recent Reservation Section -->
+        <section class="reservation-section card">
+            <div class="card-header">
+                <h2 class="section-title">
+                    <span class="material-icons">history</span>
+                    最近の予約
+                </h2>
+            </div>
+            <div class="card-body">
+                {% if current_user.is_anonymous %}
+                    <div class="login-prompt">
+                        <span class="material-icons prompt-icon">login</span>
+                        <p>ログインすると予約履歴が表示されます</p>
+                        <md-filled-button href="/login" class="prompt-btn">
+                            ログインする
+                        </md-filled-button>
+                    </div>
+                {% elif current_user.is_authenticated %}
+                    {% if reserve_items == None %}
+                        <div class="empty-state">
+                            <span class="material-icons empty-icon">shopping_cart</span>
+                            <p>最近の予約はありません</p>
+                            <md-filled-button href="/reserve" class="empty-btn">
+                                予約する
+                            </md-filled-button>
+                        </div>
+                    {% else %}
+                        <div class="reservation-details">
+                            <div class="reservation-header">
+                                <div class="reservation-date">
+                                    <span class="material-icons">event</span>
+                                    {{ reserve_items.reserve_day }}
+                                </div>
+                                <div class="reservation-status {{ reserve_items.state | lower | replace(' ', '-') }}">
+                                    {{ reserve_items.state }}
+                                </div>
+                            </div>
+                            
+                            <div class="reservation-items">
+                                <h4>予約商品</h4>
+                                <div class="item-list">
                                     {% if reserve_items.menu_item_0 != None %}
-                                    {% for menu in menus %}
-                                    {% if reserve_items.menu_item_0.id == menu.id %}
-                                        <li><img src="{{ url_for('static', filename=menu.product_image) }}" style="width: 50px; height: 50px; border-radius: 20px;">{{ menu.productname }}</li>
-                                    {% endif %}
-                                    {% endfor %}
-                                    {% else %}
-                                        <li>予約された商品はありません</li>
+                                        {% for menu in menus %}
+                                            {% if reserve_items.menu_item_0.id == menu.id %}
+                                                <div class="item-card">
+                                                    <img src="{{ url_for('static', filename=menu.product_image) }}" 
+                                                         alt="{{ menu.productname }}" 
+                                                         class="item-image">
+                                                    <div class="item-info">
+                                                        <h5>{{ menu.productname }}</h5>
+                                                        <p>{{ menu.price }}円</p>
+                                                    </div>
+                                                </div>
+                                            {% endif %}
+                                        {% endfor %}
                                     {% endif %}
 
                                     {% if reserve_items.menu_item_1 != None %}
-                                    {% for menu in menus %}
-                                    {% if reserve_items.menu_item_1.id == menu.id %}
-                                        <li><img src="{{ url_for('static', filename=menu.product_image) }}" style="width: 50px; height: 50px; border-radius: 20px;">{{ menu.productname }}</li>
-                                    {% endif %}
-                                    {% endfor %}
+                                        {% for menu in menus %}
+                                            {% if reserve_items.menu_item_1.id == menu.id %}
+                                                <div class="item-card">
+                                                    <img src="{{ url_for('static', filename=menu.product_image) }}" 
+                                                         alt="{{ menu.productname }}" 
+                                                         class="item-image">
+                                                    <div class="item-info">
+                                                        <h5>{{ menu.productname }}</h5>
+                                                        <p>{{ menu.price }}円</p>
+                                                    </div>
+                                                </div>
+                                            {% endif %}
+                                        {% endfor %}
                                     {% endif %}
 
                                     {% if reserve_items.menu_item_2 != None %}
-                                    {% for menu in menus %}
-                                    {% if reserve_items.menu_item_2.id == menu.id %}
-                                        <li><img src="{{ url_for('static', filename=menu.product_image) }}" style="width: 50px; height: 50px; border-radius: 20px;">{{ menu.productname }}</li>
+                                        {% for menu in menus %}
+                                            {% if reserve_items.menu_item_2.id == menu.id %}
+                                                <div class="item-card">
+                                                    <img src="{{ url_for('static', filename=menu.product_image) }}" 
+                                                         alt="{{ menu.productname }}" 
+                                                         class="item-image">
+                                                    <div class="item-info">
+                                                        <h5>{{ menu.productname }}</h5>
+                                                        <p>{{ menu.price }}円</p>
+                                                    </div>
+                                                </div>
+                                            {% endif %}
+                                        {% endfor %}
                                     {% endif %}
-                                    {% endfor %}
-                                    {% endif %}
-
 
                                     {% if reserve_items.menu_item_3 != None %}
-                                    {% for menu in menus %}
-                                    {% if reserve_items.menu_item_3.id == menu.id %}
-                                        <li><img src="{{ url_for('static', filename=menu.product_image) }}" style="width: 50px; height: 50px; border-radius: 20px;">{{ menu.productname }}</li>
-                                    {% endif %}
-                                    {% endfor %}
+                                        {% for menu in menus %}
+                                            {% if reserve_items.menu_item_3.id == menu.id %}
+                                                <div class="item-card">
+                                                    <img src="{{ url_for('static', filename=menu.product_image) }}" 
+                                                         alt="{{ menu.productname }}" 
+                                                         class="item-image">
+                                                    <div class="item-info">
+                                                        <h5>{{ menu.productname }}</h5>
+                                                        <p>{{ menu.price }}円</p>
+                                                    </div>
+                                                </div>
+                                            {% endif %}
+                                        {% endfor %}
                                     {% endif %}
 
                                     {% if reserve_items.menu_item_4 != None %}
-                                    {% for menu in menus %}
-                                    {% if reserve_items.menu_item_4.id == menu.id %}
-                                        <li><img src="{{ url_for('static', filename=menu.product_image) }}" style="width: 50px; height: 50px; border-radius: 20px;">{{ menu.productname }}</li>
+                                        {% for menu in menus %}
+                                            {% if reserve_items.menu_item_4.id == menu.id %}
+                                                <div class="item-card">
+                                                    <img src="{{ url_for('static', filename=menu.product_image) }}" 
+                                                         alt="{{ menu.productname }}" 
+                                                         class="item-image">
+                                                    <div class="item-info">
+                                                        <h5>{{ menu.productname }}</h5>
+                                                        <p>{{ menu.price }}円</p>
+                                                    </div>
+                                                </div>
+                                            {% endif %}
+                                        {% endfor %}
                                     {% endif %}
-                                    {% endfor %}
-                                    {% endif %}
-                                </ul>
+                                </div>
                             </div>
-                            <md-filled-button class="btn-detail" href="/my_reserved_list/detail/{{ reserve_items.id }}">詳細</md-filled-button>
-                            <md-filled-button class="btn-cancel" href="/cancel_reserve/{{ reserve_items.id }}">キャンセル</md-filled-button>
+
+                            <div class="reservation-summary">
+                                <div class="total-price">
+                                    <span class="material-icons">payments</span>
+                                    合計: {{ reserve_items.price }}円
+                                </div>
+                            </div>
+
+                            <div class="reservation-actions">
+                                <md-filled-button href="/my_reserved_list/detail/{{ reserve_items.id }}" class="action-btn">
+                                    <span slot="icon" class="material-icons">visibility</span>
+                                    詳細を見る
+                                </md-filled-button>
+                                <md-outlined-button href="/cancel_reserve/{{ reserve_items.id }}" class="action-btn">
+                                    <span slot="icon" class="material-icons">cancel</span>
+                                    キャンセル
+                                </md-outlined-button>
+                            </div>
                         </div>
                     {% endif %}
                 {% endif %}
             </div>
-        </div>
+        </section>
     </div>
 
+    <!-- Survey Section -->
     {% if current_user.is_authenticated %}
-        <h3 style="text-align: center; margin-top: 30px;">アンケートにご協力ください</h3>
-        <iframe style="margin: 0 auto; display: block" src="https://docs.google.com/forms/d/e/1FAIpQLScKNIqVlzvJ4gDzwUKSLB1nYnwVjUgjIqX5qvPmMGk9bKeSLg/viewform?embedded=true" width="640" height="1733" frameborder="0" marginheight="0" marginwidth="0">読み込んでいます…</iframe>
+        <!-- アンケート削除済み -->
     {% endif %}
 </div>
 
 <style>
-    /* メニューランキングのスタイル */
-    .i_m_title {
-        height: 50px;
-        font-size: 30px;
-        text-align: center;
-        font-weight: bold;
-        border-bottom: 1px solid var(--md-sys-color-outline);
-    }
+/* Home Container */
+.home-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: var(--spacing-lg);
+}
 
-    .i_m_cs {
-        display: flex;
+/* Hero Section */
+.hero-section {
+    background: linear-gradient(135deg, var(--md-sys-color-primary-container) 0%, var(--md-sys-color-surface-container) 100%);
+    border-radius: var(--border-radius-xl);
+    padding: var(--spacing-xxl);
+    margin-bottom: var(--spacing-xl);
+    text-align: center;
+    box-shadow: var(--shadow-lg);
+}
+
+.hero-title {
+    font-size: 2.5rem;
+    font-weight: 700;
+    color: var(--md-sys-color-on-primary-container);
+    margin-bottom: var(--spacing-md);
+    line-height: 1.2;
+}
+
+.hero-subtitle {
+    color: var(--md-sys-color-primary);
+    font-weight: 500;
+}
+
+.hero-description {
+    font-size: 1.1rem;
+    color: var(--md-sys-color-on-surface-variant);
+    margin-bottom: var(--spacing-xl);
+    max-width: 600px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.hero-actions {
+    display: flex;
+    gap: var(--spacing-md);
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+.hero-btn {
+    min-width: 160px;
+}
+
+/* Content Grid */
+.content-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--spacing-xl);
+    margin-bottom: var(--spacing-xl);
+}
+
+@media (max-width: 768px) {
+    .content-grid {
+        grid-template-columns: 1fr;
+        gap: var(--spacing-lg);
+    }
+}
+
+/* Section Titles */
+.section-title {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: var(--md-sys-color-on-surface);
+    margin: 0;
+}
+
+.section-title .material-icons {
+    color: var(--md-sys-color-primary);
+}
+
+/* Ranking Section */
+.ranking-list {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-md);
+}
+
+.ranking-item {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-md);
+    padding: var(--spacing-md);
+    border-radius: var(--border-radius-lg);
+    background: var(--md-sys-color-surface-container-low);
+    transition: all var(--transition-fast);
+}
+
+.ranking-item:hover {
+    background: var(--md-sys-color-surface-variant);
+    transform: translateX(4px);
+}
+
+.ranking-number {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: var(--md-sys-color-primary);
+    color: var(--md-sys-color-on-primary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 0.9rem;
+}
+
+.ranking-link {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-md);
+    flex: 1;
+    text-decoration: none;
+    color: inherit;
+}
+
+.ranking-image {
+    width: 60px;
+    height: 60px;
+    border-radius: var(--border-radius-md);
+    object-fit: cover;
+}
+
+.ranking-info {
+    flex: 1;
+}
+
+.ranking-name {
+    font-size: 1rem;
+    font-weight: 600;
+    margin: 0 0 var(--spacing-xs) 0;
+    color: var(--md-sys-color-on-surface);
+}
+
+.ranking-price {
+    font-size: 0.9rem;
+    color: var(--md-sys-color-primary);
+    font-weight: 600;
+    margin: 0;
+}
+
+/* Reservation Section */
+.reservation-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: var(--spacing-lg);
+    padding-bottom: var(--spacing-md);
+    border-bottom: 1px solid var(--md-sys-color-outline);
+}
+
+.reservation-date {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+    color: var(--md-sys-color-on-surface-variant);
+    font-size: 0.9rem;
+}
+
+.reservation-status {
+    padding: var(--spacing-xs) var(--spacing-sm);
+    border-radius: var(--border-radius-md);
+    font-size: 0.8rem;
+    font-weight: 600;
+    text-transform: uppercase;
+}
+
+.reservation-status.予約済み {
+    background: var(--md-sys-color-primary-container);
+    color: var(--md-sys-color-on-primary-container);
+}
+
+.reservation-status.確認済み {
+    background: var(--md-sys-color-secondary-container);
+    color: var(--md-sys-color-on-secondary-container);
+}
+
+.reservation-status.受け取り済み {
+    background: var(--md-sys-color-tertiary-container);
+    color: var(--md-sys-color-on-tertiary-container);
+}
+
+.reservation-items {
+    margin-bottom: var(--spacing-lg);
+}
+
+.reservation-items h4 {
+    margin: 0 0 var(--spacing-md) 0;
+    color: var(--md-sys-color-on-surface);
+}
+
+.item-list {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: var(--spacing-md);
+}
+
+.item-card {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+    padding: var(--spacing-sm);
+    border-radius: var(--border-radius-md);
+    background: var(--md-sys-color-surface-container-low);
+}
+
+.item-image {
+    width: 40px;
+    height: 40px;
+    border-radius: var(--border-radius-sm);
+    object-fit: cover;
+}
+
+.item-info h5 {
+    margin: 0 0 var(--spacing-xs) 0;
+    font-size: 0.9rem;
+    color: var(--md-sys-color-on-surface);
+}
+
+.item-info p {
+    margin: 0;
+    font-size: 0.8rem;
+    color: var(--md-sys-color-primary);
+    font-weight: 600;
+}
+
+.reservation-summary {
+    background: var(--md-sys-color-primary-container);
+    color: var(--md-sys-color-on-primary-container);
+    padding: var(--spacing-md);
+    border-radius: var(--border-radius-md);
+    margin-bottom: var(--spacing-lg);
+}
+
+.total-price {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+    font-size: 1.1rem;
+    font-weight: 600;
+}
+
+.reservation-actions {
+    display: flex;
+    gap: var(--spacing-md);
+    flex-wrap: wrap;
+}
+
+.action-btn {
+    flex: 1;
+    min-width: 120px;
+}
+
+/* Empty States */
+.empty-state {
+    text-align: center;
+    padding: var(--spacing-xl);
+    color: var(--md-sys-color-on-surface-variant);
+}
+
+.empty-icon {
+    font-size: 3rem;
+    color: var(--md-sys-color-outline);
+    margin-bottom: var(--spacing-md);
+}
+
+.empty-state p {
+    margin-bottom: var(--spacing-lg);
+    font-size: 1rem;
+}
+
+.empty-btn, .prompt-btn {
+    min-width: 160px;
+}
+
+/* Login Prompt */
+.login-prompt {
+    text-align: center;
+    padding: var(--spacing-xl);
+}
+
+.prompt-icon {
+    font-size: 3rem;
+    color: var(--md-sys-color-primary);
+    margin-bottom: var(--spacing-md);
+}
+
+.login-prompt p {
+    margin-bottom: var(--spacing-lg);
+    color: var(--md-sys-color-on-surface-variant);
+}
+
+/* Survey Section */
+.survey-section {
+    margin-top: var(--spacing-xl);
+}
+
+.survey-description {
+    color: var(--md-sys-color-on-surface-variant);
+    margin-bottom: var(--spacing-lg);
+}
+
+.survey-iframe-container {
+    position: relative;
+    width: 100%;
+    height: 600px;
+    border-radius: var(--border-radius-md);
+    overflow: hidden;
+}
+
+.survey-iframe {
+    width: 100%;
+    height: 100%;
+    border: none;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .hero-title {
+        font-size: 2rem;
+    }
+    
+    .hero-section {
+        padding: var(--spacing-lg);
+    }
+    
+    .survey-iframe-container {
+        height: 400px;
+    }
+}
+
+@media (max-width: 480px) {
+    .home-container {
+        padding: var(--spacing-md);
+    }
+    
+    .hero-title {
+        font-size: 1.5rem;
+    }
+    
+    .hero-actions {
+        flex-direction: column;
         align-items: center;
-        margin-top: 20px;
-        border-radius: 10px;
-        padding: 10px;
     }
-
-    .ranking_item {
-        display: flex;
-        align-items: center;
-        width: 100%;
-        text-decoration: none;
-        color: inherit;
+    
+    .reservation-actions {
+        flex-direction: column;
     }
-
-    .ranking_img {
-        width: 100px;
-        height: 100px;
-        border-radius: 10px;
-        margin-right: 15px;
+    
+    .item-list {
+        grid-template-columns: 1fr;
     }
-
-    .ranking_text p {
-        font-size: 18px;
-        margin: 0;
-    }
-
-    /* 予約履歴のスタイル */
-    .reservation_details {
-        margin-top: 20px;
-    }
-
-    .reservation_date, .reservation_price {
-        font-size: 18px;
-        margin-bottom: 10px;
-    }
-
-    .reserved_items ul {
-        list-style-type: none;
-        padding-left: 0;
-    }
-
-    .reserved_items li {
-        font-size: 16px;
-        margin-bottom: 5px;
-    }
-
-    .sidebar {
-        padding: 20px;
-        background-color: var(--md-sys-color-background);
-        border-radius: 20px;
-    }
-
-    .i_s_title {
-        text-align: center;
-        font-size: 30px;
-        font-weight: bold;
-        border-bottom: 1px solid var(--md-sys-color-outline);
-        padding-bottom: 10px;
-    }
+}
 </style>
-
 {% endblock %}

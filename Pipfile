@@ -11,6 +11,8 @@ flask-wtf = "*"
 flask-migrate = "*"
 flask-security = "*"
 email-validator = "*"
+pywebpush = "*"
+py-vapid = "*"
 
 [dev-packages]
 
