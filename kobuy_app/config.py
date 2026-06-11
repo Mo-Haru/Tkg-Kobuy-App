@@ -1,7 +1,11 @@
 import os
 from flask import Flask
 
-DEBUG = True
+# 本番環境では絶対にデバッグモードを有効にしないこと。
+# Werkzeugのデバッガが有効だと、例外発生時に対話型コンソールが露出し
+# リモートコード実行(RCE)につながる致命的な脆弱性となる。
+# 開発時のみ環境変数 FLASK_DEBUG=1 を指定して有効化する。
+DEBUG = os.environ.get('FLASK_DEBUG', '0') == '1'
 SQLALCHEMY_DATABASE_URI = 'sqlite:///kobuy-app.db'
 SQLALCHEMY_TRACK_MODIFICATIONS = True
 SECURITY_REGISTERABLE = True

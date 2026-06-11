@@ -390,7 +390,13 @@ def login():
             login_user(user)  # ユーザーをログイン状態にする
             flash("ログイン完了", "success")  # ログイン成功メッセージ
             next_page = request.args.get('next') or session.pop('next_url', None)  # リダイレクト先を取得
-            if not next_page or not next_page.startswith('/'):  # 安全なリダイレクト先を確認
+            # 安全なリダイレクト先(同一サイト内の相対パス)のみ許可する。
+            # "//evil.com" や "/\evil.com" はブラウザが外部URLとして解釈するため拒否し、
+            # オープンリダイレクトによるフィッシングを防ぐ。
+            if (not next_page
+                    or not next_page.startswith('/')
+                    or next_page.startswith('//')
+                    or next_page.startswith('/\\')):
                 next_page = url_for('index')  # デフォルトリダイレクト先
             return redirect(next_page)
         
