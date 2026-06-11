@@ -88,6 +88,7 @@
 
     <!-- Reserve Form (Hidden) -->
     <form id="reserveForm" method="POST" style="display: none;">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
         <input type="hidden" name="reserve_item_0" value="{{ menu_item.id }}">
         <input type="hidden" name="reserve_item_1" value="None">
         <input type="hidden" name="reserve_item_2" value="None">

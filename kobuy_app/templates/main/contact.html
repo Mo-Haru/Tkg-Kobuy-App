@@ -11,6 +11,7 @@
     </div>
     <div class="form">
         <form action="" method="POST">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
             <md-outlined-text-field  name="title" label="タイトル" value="" style="width: 100%;">
             </md-outlined-text-field>
             <div style="height: 20px;"></div>

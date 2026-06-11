@@ -16,6 +16,7 @@
                 <span slot="icon" class="material-icons  head_icon" viewBox="0 0 48 48">arrow_back</span>
             </md-filled-button>
             <form method="post">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                 <md-filled-button class="cancel">
                     <span>キャンセルする</span>
                     <span slot="icon" class="material-icons  head_icon" viewBox="0 0 48 48">cancel</span>

@@ -78,7 +78,7 @@
                         <span class="stock-value">{{ stock.today_stock }}</span> / {{ stock.today_stock_limit }}
                     </td>
                     <td>{{ menu.buy_cnt }}</td>
-                    <td>{{ menu.order }}</td>
+                    <td>{{ menu.orders }}</td>
                     <td>
                         <div class="action-buttons">
                             <md-filled-tonal-button onclick="showProductDetail({{ menu.id }})" class="action-btn">
@@ -278,8 +278,10 @@ function deleteProduct(productId) {
             method: 'DELETE',
             headers: {
                 'Content-Type': 'application/json',
-                'X-Requested-With': 'XMLHttpRequest'
-            }
+                'X-Requested-With': 'XMLHttpRequest',
+                'X-CSRFToken': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+            },
+            credentials: 'same-origin'
         })
         .then(response => response.json())
         .then(data => {

@@ -49,6 +49,7 @@
             </div>
             
             <form class="reserve-form" id="reserveForm" method="POST" action="">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
             <input type="hidden" name="reserve_item_0" id="reserve_item_0" value="None">
             <input type="hidden" name="reserve_item_1" id="reserve_item_1" value="None">
             <input type="hidden" name="reserve_item_2" id="reserve_item_2" value="None">
