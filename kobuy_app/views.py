@@ -7,10 +7,14 @@ from datetime import datetime
 from werkzeug.utils import secure_filename
 import os
 import json
+from uuid import uuid4
 from pywebpush import webpush, WebPushException
 import base64
 
 main = Blueprint('main', __name__)
+
+# アップロードを許可する画像拡張子
+ALLOWED_IMAGE_EXTENSIONS = {"jpg", "jpeg", "png"}
 
 # ユーザー情報とwebtitleの関数
 def current_webdata(webtitle: str) -> dict:
@@ -44,21 +48,34 @@ def current_webdata(webtitle: str) -> dict:
         }
     return data
 
-def file_upload(img) -> str:
+def file_upload(file_storage) -> str:
     """
-    画像のファイルオブジェクトを受け取り、アップロードしてファイルパスを返す関数。
+    画像のFileStorage(form.xxx.data)を受け取り、検証してから保存しパスを返す関数。
     <form method="POST" 「enctype="multipart/form-data"」<-これ大事>
+
+    セキュリティ対策:
+    - secure_filename でパストラバーサルを防止
+    - 拡張子のホワイトリスト検証(画像以外のアップロードを拒否)
+    - 推測・上書きを防ぐためファイル名をランダム化
+    保存できない/不正な場合は "" を返す。
     """
-    if img is None:
-        print("画像がアップロードされていません")
+    if file_storage is None or not getattr(file_storage, "filename", ""):
         return ""  # 画像がアップロードされていない場合
-    
-    filename = secure_filename(img.data.filename)
-    if filename is not None:
-        filepath = f"kobuy_app/static/uploads/{filename}"
-        img.data.save(filepath)  # 直接ファイルオブジェクトを保存
-        return f"uploads/{filename}"
-    return "error"
+
+    filename = secure_filename(file_storage.filename)
+    if not filename or "." not in filename:
+        return ""
+
+    ext = filename.rsplit(".", 1)[1].lower()
+    if ext not in ALLOWED_IMAGE_EXTENSIONS:
+        # 許可されていない拡張子(.php や .svg 等)は拒否する
+        return ""
+
+    unique_name = f"{uuid4().hex}.{ext}"
+    upload_dir = os.path.join(os.path.dirname(__file__), "static", "uploads")
+    os.makedirs(upload_dir, exist_ok=True)
+    file_storage.save(os.path.join(upload_dir, unique_name))
+    return f"uploads/{unique_name}"
 
 def reserve_items(request):
     if Sale_state.query.filter_by(id=0).first().state == True:
@@ -83,7 +100,7 @@ def reserve_items(request):
 
         except Exception as e:
             flash("エラーが発生しました。予約はされていません。", "error")
-            flash(f"{e}", "error")
+            app.logger.exception("Unhandled exception")
             return redirect(url_for("reserve"))
 
         try:
@@ -130,7 +147,7 @@ def reserve_items(request):
         
         except Exception as e:
             flash("エラーが発生しました", "error")
-            flash(f"{e}", "error")
+            app.logger.exception("Unhandled exception")
             db.session.rollback()
             return redirect(url_for("reserve"))
                 
@@ -176,22 +193,30 @@ def api_login():
 def api_register():
     """Ajax用アカウント作成エンドポイント"""
     try:
-        data = request.get_json()
-        con_code = "12345678"
-        
+        data = request.get_json(silent=True) or {}
+        con_code = app.config.get('REGISTER_CONFIRM_CODE')
+
         # バリデーション
         if data.get('confirm_code') != con_code:
             return jsonify({
                 'success': False,
                 'message': '確認コードが正しくありません'
             }), 400
-        
+
         if data.get('password') != data.get('confirm'):
             return jsonify({
                 'success': False,
                 'message': 'パスワードが一致しません'
             }), 400
-        
+
+        # パスワード長(フォーム側と同じ最低8文字)を強制する
+        password = data.get('password') or ''
+        if len(password) < 8:
+            return jsonify({
+                'success': False,
+                'message': 'パスワードは8文字以上で入力してください'
+            }), 400
+
         # データの取得と変換
         lastname = data.get('lastname')
         firstname = data.get('firstname')
@@ -199,34 +224,73 @@ def api_register():
         cls = data.get('cls')
         num = data.get('num')
         email = data.get('email')
-        
+
         # 必須フィールドのチェック
         if not all([lastname, firstname, grade, cls, num, email]):
             return jsonify({
                 'success': False,
                 'message': '必須項目が入力されていません'
             }), 400
-        
+
+        # 学年・組・番号は整数かつ範囲内であることを検証する
+        try:
+            grade = int(grade)
+            cls = int(cls)
+            num = int(num)
+        except (TypeError, ValueError):
+            return jsonify({
+                'success': False,
+                'message': '学年・組・番号は数値で入力してください'
+            }), 400
+
+        if not (1 <= grade <= 4):
+            return jsonify({'success': False, 'message': '学年が不正です。'}), 400
+        if not (1 <= cls <= 4):
+            return jsonify({'success': False, 'message': '組が不正です。'}), 400
+        if not (1 <= num <= 40):
+            return jsonify({'success': False, 'message': '出席番号が不正です。'}), 400
+
+        # メールアドレスのドメイン制限(フォーム側と同じ)
+        allowed_domains = app.config.get('ALLOWED_EMAIL_DOMAINS', [])
+        if allowed_domains and not any(str(email).endswith(domain) for domain in allowed_domains):
+            return jsonify({
+                'success': False,
+                'message': '指定されたメールアドレスを使用してください。'
+            }), 400
+
+        # メールアドレスの重複チェック
+        if User.query.filter_by(email=email).first():
+            return jsonify({
+                'success': False,
+                'message': 'このメールアドレスでは登録できません。'
+            }), 400
+
         # ユーザー作成
         user = User()
         user.lastname = lastname
         user.firstname = firstname
-        user.grade = int(grade)
-        user.cls = int(cls)
-        user.num = int(num)
+        user.grade = grade
+        user.cls = cls
+        user.num = num
         user.email = email
-        user.set_password(data.get('password'))
-        
+        user.set_password(password)
+
         db.session.add(user)
         db.session.commit()
-        
+
+        # 利用規約同意レコードを作成(フォーム側と挙動を揃える)
+        agree = Agreement(user_id=user.id, agreed=False)
+        db.session.add(agree)
+        db.session.commit()
+
         return jsonify({
             'success': True,
             'message': 'アカウントが作成されました',
             'redirect': url_for('login')
         })
-        
+
     except Exception as e:
+        app.logger.exception("api_register failed")
         db.session.rollback()
         return jsonify({
             'success': False,
@@ -390,7 +454,13 @@ def login():
             login_user(user)  # ユーザーをログイン状態にする
             flash("ログイン完了", "success")  # ログイン成功メッセージ
             next_page = request.args.get('next') or session.pop('next_url', None)  # リダイレクト先を取得
-            if not next_page or not next_page.startswith('/'):  # 安全なリダイレクト先を確認
+            # 安全なリダイレクト先(同一サイト内の相対パス)のみ許可する。
+            # "//evil.com" や "/\evil.com" はブラウザが外部URLとして解釈するため拒否し、
+            # オープンリダイレクトによるフィッシングを防ぐ。
+            if (not next_page
+                    or not next_page.startswith('/')
+                    or next_page.startswith('//')
+                    or next_page.startswith('/\\')):
                 next_page = url_for('index')  # デフォルトリダイレクト先
             return redirect(next_page)
         
@@ -403,14 +473,13 @@ def login():
 def register():
     data = current_webdata("ユーザー登録")
     form = RegisterForm()
-    con_code = "12345678"
-    
+    con_code = app.config.get('REGISTER_CONFIRM_CODE')
+
     # Ajaxリクエストの場合はJSONレスポンス
     if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
         return api_register()
-    
+
     if request.method == 'POST' and form.validate():
-        print(form.confirm_code.data)
         if form.confirm_code.data == con_code:
             if form.password.data is None or form.confirm.data is None:
                 flash('パスワードを入力してください', "error")
@@ -432,8 +501,8 @@ def register():
                 flash('このメールアドレスでは登録できません。', 'error')
                 return redirect(url_for('register'))
             
-            allowed_domains = ["fukui-ed.jp"]
-            if not any(form.email.data.endswith(domain) for domain in allowed_domains):
+            allowed_domains = app.config.get('ALLOWED_EMAIL_DOMAINS', [])
+            if allowed_domains and not any(form.email.data.endswith(domain) for domain in allowed_domains):
                 flash('指定されたメールアドレスを使用してください。', "error")
                 return redirect(url_for('register'))
             
@@ -474,7 +543,8 @@ def register():
                     flash(f'{form.lastname.data}{form.firstname.data}さん登録ありがとうございます。', "success")
                     return redirect(url_for('login'))
                 except Exception as e:
-                    flash(f"エラーが発生しました: {e}", "error")
+                    app.logger.exception("register failed")
+                    flash("エラーが発生しました", "error")
                     flash("何度も発生する場合、管理者に連絡してください。", "error")
                     return redirect(url_for('register'))
             
@@ -486,7 +556,7 @@ def register():
     return render_template('main/register.html', form=form, data = data)
 
 
-@app.route('/logout')
+@app.route('/logout', methods=["POST"])
 def logout():
     logout_user()
     return redirect(url_for('login'))
@@ -530,7 +600,8 @@ def rule():
                 return redirect(url_for("index"))
             
             except Exception as e:
-                flash(f"エラーが発生しました: {e}", "error")
+                app.logger.exception("rule agreement failed")
+                flash("エラーが発生しました", "error")
                 return redirect(url_for("rule"))
 
 
@@ -555,8 +626,12 @@ def menu_detail(menu_id):
         return render_template("main/menu_detail.html", menu_item=menu_item, data=data)
     
     if request.method == "POST":
+        # 予約(状態変更)はログイン必須。GETの閲覧は公開のままにする。
+        if not current_user.is_authenticated:
+            flash("予約するにはログインしてください", "error")
+            return redirect(url_for("login"))
         try:
-            if  Sale_state.query.filter_by(id=0).first().state == True:    
+            if  Sale_state.query.filter_by(id=0).first().state == True:
                 stock_item = Stock.query.filter_by(id=menu_id).first()
                 item = Menu.query.filter_by(id=menu_id).first()
                 if stock_item.today_stock > 0:
@@ -590,7 +665,7 @@ def menu_detail(menu_id):
             
         except Exception as e:
             flash("エラー：エラーが発生しました。")
-            flash(f"{e}", "error")
+            app.logger.exception("Unhandled exception")
             db.session.rollback()
             return redirect(url_for("reserve"))
 
@@ -703,7 +778,7 @@ def reserve():
         
         except Exception as e:
             flash("エラーが発生しました", "error")
-            flash(f"{e}", "error")
+            app.logger.exception("Unhandled exception")
             print(e)
             return redirect(url_for("reserve"))
 
@@ -770,7 +845,7 @@ def reserve_item(item_id):
             
         except Exception as e:
             flash("エラー：エラーが発生しました。")
-            flash(f"{e}", "error")
+            app.logger.exception("Unhandled exception")
             db.session.rollback()
             return redirect(url_for("reserve"))
 
@@ -792,12 +867,14 @@ def reserve_cancel(reserve_id):
         return render_template("main/cancel.html", data = data)
 
     if request.method == "POST":
-        if current_user.id == Reserved.query.filter_by(id=reserve_id).first().user_id:
-            reserve = Reserved.query.filter_by(id=reserve_id).first()
-            if reserve is None:
-                flash("予約が存在しません", "error")
-                return redirect(url_for("my_reserve_lis"))
-            
+        reserve = Reserved.query.filter_by(id=reserve_id).first()
+        # 存在確認を先に行い、None参照によるクラッシュを防ぐ
+        if reserve is None:
+            flash("予約が存在しません", "error")
+            return redirect(url_for("my_reserve_lis"))
+
+        # 本人の予約のみキャンセル可能(IDOR対策)
+        if current_user.id == reserve.user_id:
             if reserve.state == "キャンセル":
                 flash("すでにキャンセルされています", "error")
                 return redirect(url_for("my_reserve_lis"))
@@ -909,6 +986,9 @@ def reserve_list():
 def reserve_detail(reserve_id):
     data = current_webdata("予約詳細")
     reserve = Reserved.query.filter_by(id=reserve_id).first()
+    if reserve is None:
+        flash("予約が存在しません", "error")
+        return redirect(url_for("reserve_list"))
     reserve_user = User.query.filter_by(id=reserve.user_id).first()
     return render_template("admin/reserve_detail.html", reserve=reserve, data = data, reserve_user=reserve_user)
 
@@ -935,11 +1015,14 @@ def reserve_list_a():
 
 
 
-@app.route("/admin/reserve/state_rdy/<int:reserve_id>" , methods = ["POST", "GET"])
+@app.route("/admin/reserve/state_rdy/<int:reserve_id>" , methods = ["POST"])
 @login_required
 @admin_required
 def reserve_s_rdy(reserve_id):
     reserve_edit = Reserved.query.filter_by(id=reserve_id).first()
+    if reserve_edit is None:
+        flash("予約が存在しません", "error")
+        return redirect(url_for("reserve_list"))
     reserve_edit.state = "準備完了"
     db.session.commit()
     
@@ -949,11 +1032,14 @@ def reserve_s_rdy(reserve_id):
     flash(f"{reserve_id}は準備完了に変更されました", "success")
     return redirect(url_for("reserve_list"))
 
-@app.route("/admin/reserve/state_completed/<int:reserve_id>" , methods = ["POST", "GET"])
+@app.route("/admin/reserve/state_completed/<int:reserve_id>" , methods = ["POST"])
 @login_required
 @admin_required
 def reserve_s_completed(reserve_id):
     reserve_edit = Reserved.query.filter_by(id=reserve_id).first()
+    if reserve_edit is None:
+        flash("予約が存在しません", "error")
+        return redirect(url_for("reserve_list"))
     reserve_edit.state = "受取済み"
     db.session.commit()
     
@@ -963,11 +1049,14 @@ def reserve_s_completed(reserve_id):
     flash(f"{reserve_id}は受取済みに変更されました", "success")
     return redirect(url_for("reserve_list"))
 
-@app.route("/admin/reserve/state_cancelled/<int:reserve_id>" , methods = ["POST", "GET"])
+@app.route("/admin/reserve/state_cancelled/<int:reserve_id>" , methods = ["POST"])
 @login_required
 @admin_required
 def reserve_s_cancelled(reserve_id):
     reserve_edit = Reserved.query.filter_by(id=reserve_id).first()
+    if reserve_edit is None:
+        flash("予約が存在しません", "error")
+        return redirect(url_for("reserve_list"))
     reserve_edit.state = "キャンセル"
     db.session.commit()
     
@@ -979,11 +1068,14 @@ def reserve_s_cancelled(reserve_id):
 
 
 
-@app.route("/admin/reserve/state_rcp/<int:reserve_id>" , methods = ["POST", "GET"])
+@app.route("/admin/reserve/state_rcp/<int:reserve_id>" , methods = ["POST"])
 @login_required
 @admin_required
 def reserve_s_rcp(reserve_id):
     reserve_edit = Reserved.query.filter_by(id=reserve_id).first()
+    if reserve_edit is None:
+        flash("予約が存在しません", "error")
+        return redirect(url_for("reserve_list"))
     reserve_edit.state = "受取済み"
     db.session.commit()
     flash(f"{reserve_id}は受取済みに変更されました", "success")
@@ -991,11 +1083,14 @@ def reserve_s_rcp(reserve_id):
 
 
 
-@app.route("/admin/reserve/state_cancel/<int:reserve_id>")
+@app.route("/admin/reserve/state_cancel/<int:reserve_id>", methods = ["POST"])
 @login_required
 @admin_required
 def reserve_s_cancel(reserve_id):
     reserve = Reserved.query.filter_by(id=reserve_id).first()
+    if reserve is None:
+        flash("予約が存在しません", "error")
+        return redirect(url_for("reserve_list"))
     reserve.state = "キャンセル(購買側都合)"
     db.session.commit()
     flash("購買側都合でキャンセルされました", "success")
@@ -1019,7 +1114,7 @@ def menu_edit():
     return render_template("admin/menu_main_edit.html", menu=menu, data=data, stock=stock, menu_categorys=menu_categorys)
 
 
-@app.route("/admin/menu/up/<int:menu_id>")
+@app.route("/admin/menu/up/<int:menu_id>", methods = ["POST"])
 @login_required
 @admin_required
 def menu_up(menu_id):
@@ -1044,7 +1139,7 @@ def menu_up(menu_id):
     return redirect(url_for("menu_edit"))
 
 
-@app.route("/admin/menu/down/<int:menu_id>")
+@app.route("/admin/menu/down/<int:menu_id>", methods = ["POST"])
 @login_required
 @admin_required
 def menu_down(menu_id):
@@ -1161,7 +1256,7 @@ def menu_stock():
 
 
 
-@app.route("/admin/menu/stock/dec/<int:menuid>")
+@app.route("/admin/menu/stock/dec/<int:menuid>", methods = ["POST"])
 @login_required
 @admin_required
 def menu_stock_dec(menuid:int):
@@ -1184,7 +1279,7 @@ def menu_stock_dec(menuid:int):
 
 
 
-@app.route("/admin/menu/stock/inc/<int:menuid>")
+@app.route("/admin/menu/stock/inc/<int:menuid>", methods = ["POST"])
 @login_required
 @admin_required
 def menu_stock_inc(menuid:int):
@@ -1306,7 +1401,7 @@ def menu_new():
     elif form.validate_on_submit:
         print(form.product_image.data)
         if form.product_image.data:
-            tmp_image = file_upload(form.product_image)
+            tmp_image = file_upload(form.product_image.data)
         else:
             tmp_image = None
         new_menu = Menu(
@@ -1347,7 +1442,7 @@ def menu_img(menu_id):
 
 
 
-@app.route("/admin/reset_stock")
+@app.route("/admin/reset_stock", methods = ["POST"])
 @login_required
 @admin_required
 def reset_stock():
@@ -1375,7 +1470,7 @@ def sale_option():
 
 
 
-@app.route("/admin/start_sale")
+@app.route("/admin/start_sale", methods = ["POST"])
 @login_required
 @admin_required
 def start_sale():
@@ -1395,7 +1490,7 @@ def start_sale():
 
 
 
-@app.route("/admin/end_sale")
+@app.route("/admin/end_sale", methods = ["POST"])
 @login_required
 @admin_required
 def stop_sale():
@@ -1453,7 +1548,7 @@ def admin_product_detail(product_id):
                     'description': menu.explanation,
                     'image': url_for('static', filename=menu.product_image) if menu.product_image else None,
                     'sales': menu.buy_cnt,
-                    'order': menu.order
+                    'order': menu.orders
                 },
                 'stock': {
                     'current': stock.today_stock if stock else 0,
@@ -1464,7 +1559,8 @@ def admin_product_detail(product_id):
                 }
             })
         except Exception as e:
-            return jsonify({'success': False, 'message': str(e)}), 500
+            app.logger.exception("API error")
+            return jsonify({'success': False, 'message': 'エラーが発生しました'}), 500
     return jsonify({'success': False, 'message': 'Invalid request'}), 400
 
 @app.route("/api/admin/product/<int:product_id>", methods=['DELETE'])
@@ -1478,7 +1574,8 @@ def admin_delete_product(product_id):
             db.session.commit()
             return jsonify({'success': True, 'message': '商品を削除しました'})
         except Exception as e:
-            return jsonify({'success': False, 'message': str(e)}), 500
+            app.logger.exception("API error")
+            return jsonify({'success': False, 'message': 'エラーが発生しました'}), 500
     return jsonify({'success': False, 'message': 'Invalid request'}), 400
 
 @app.route("/api/admin/reservation/<int:reservation_id>")
@@ -1528,7 +1625,8 @@ def admin_reservation_detail(reservation_id):
                 }
             })
         except Exception as e:
-            return jsonify({'success': False, 'message': str(e)}), 500
+            app.logger.exception("API error")
+            return jsonify({'success': False, 'message': 'エラーが発生しました'}), 500
     return jsonify({'success': False, 'message': 'Invalid request'}), 400
 
 @app.route("/api/admin/reservation/<int:reservation_id>/status", methods=['POST'])
@@ -1554,7 +1652,8 @@ def admin_update_reservation_status(reservation_id):
             db.session.commit()
             return jsonify({'success': True, 'message': 'ステータスを更新しました'})
         except Exception as e:
-            return jsonify({'success': False, 'message': str(e)}), 500
+            app.logger.exception("API error")
+            return jsonify({'success': False, 'message': 'エラーが発生しました'}), 500
     return jsonify({'success': False, 'message': 'Invalid request'}), 400
 
 @app.route("/api/admin/stock/<int:product_id>/<action>", methods=['POST'])
@@ -1585,7 +1684,8 @@ def admin_update_stock(product_id, action):
                 'newStock': stock.today_stock
             })
         except Exception as e:
-            return jsonify({'success': False, 'message': str(e)}), 500
+            app.logger.exception("API error")
+            return jsonify({'success': False, 'message': 'エラーが発生しました'}), 500
     return jsonify({'success': False, 'message': 'Invalid request'}), 400
 
 @app.route("/api/admin/contact/<int:contact_id>")
@@ -1613,7 +1713,8 @@ def admin_contact_detail(contact_id):
                 }
             })
         except Exception as e:
-            return jsonify({'success': False, 'message': str(e)}), 500
+            app.logger.exception("API error")
+            return jsonify({'success': False, 'message': 'エラーが発生しました'}), 500
     return jsonify({'success': False, 'message': 'Invalid request'}), 400
 
 @app.route("/admin/statistics")
@@ -1767,7 +1868,8 @@ def subscribe_push():
         
         return jsonify({'success': True, 'message': 'Subscription registered successfully'})
     except Exception as e:
-        return jsonify({'success': False, 'message': str(e)}), 500
+        app.logger.exception("API error")
+        return jsonify({'success': False, 'message': 'エラーが発生しました'}), 500
 
 @app.route('/api/notifications', methods=['GET'])
 @login_required
@@ -1790,7 +1892,8 @@ def get_notifications():
         
         return jsonify({'success': True, 'notifications': notifications_data})
     except Exception as e:
-        return jsonify({'success': False, 'message': str(e)}), 500
+        app.logger.exception("API error")
+        return jsonify({'success': False, 'message': 'エラーが発生しました'}), 500
 
 @app.route('/api/notifications/<int:notification_id>/read', methods=['POST'])
 @login_required
@@ -1807,7 +1910,8 @@ def mark_notification_read(notification_id):
         
         return jsonify({'success': True, 'message': 'Notification marked as read'})
     except Exception as e:
-        return jsonify({'success': False, 'message': str(e)}), 500
+        app.logger.exception("API error")
+        return jsonify({'success': False, 'message': 'エラーが発生しました'}), 500
 
 @app.route('/api/notifications/read-all', methods=['POST'])
 @login_required
@@ -1819,7 +1923,8 @@ def mark_all_notifications_read():
         
         return jsonify({'success': True, 'message': 'All notifications marked as read'})
     except Exception as e:
-        return jsonify({'success': False, 'message': str(e)}), 500
+        app.logger.exception("API error")
+        return jsonify({'success': False, 'message': 'エラーが発生しました'}), 500
 
 # 管理者用通知送信API
 @app.route('/admin/send-notification', methods=['POST'])
@@ -1861,7 +1966,8 @@ def send_notification():
             'message': f'Notification sent to {success_count} users'
         })
     except Exception as e:
-        return jsonify({'success': False, 'message': str(e)}), 500
+        app.logger.exception("API error")
+        return jsonify({'success': False, 'message': 'エラーが発生しました'}), 500
 
 # 予約状態変更時の通知送信
 def send_reservation_status_notification(reservation_id, new_status):

@@ -86,6 +86,18 @@
       }
     },
 
+    // Escape HTML special characters to prevent XSS when injecting
+    // server- or user-provided data via innerHTML.
+    escapeHtml: function (value) {
+      if (value === null || value === undefined) return "";
+      return String(value)
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#39;");
+    },
+
     // Show loading indicator
     showLoading: function () {
       const loading = document.createElement("div");
@@ -527,7 +539,7 @@
 
       alert.innerHTML = `
         <span class="material-icons">${icon}</span>
-        <span class="alert-text">${message}</span>
+        <span class="alert-text">${Utils.escapeHtml(message)}</span>
         ${closeButton}
       `;
 
@@ -669,6 +681,12 @@
       });
     },
 
+    // Read the CSRF token injected by the server into a meta tag
+    getCsrfToken: function () {
+      const meta = document.querySelector('meta[name="csrf-token"]');
+      return meta ? meta.getAttribute("content") : "";
+    },
+
     // Main request function
     request: function (url, options = {}) {
       const defaultOptions = {
@@ -678,6 +696,13 @@
         },
         credentials: "same-origin",
       };
+
+      const method = (options.method || "GET").toUpperCase();
+      // Attach CSRF token for state-changing requests so the server-side
+      // CSRFProtect validation passes.
+      if (!["GET", "HEAD", "OPTIONS", "TRACE"].includes(method)) {
+        defaultOptions.headers["X-CSRFToken"] = this.getCsrfToken();
+      }
 
       const finalOptions = {
         ...defaultOptions,
@@ -734,39 +759,42 @@
     buildProductDetailHTML: function (data) {
       const product = data.product;
       const stock = data.stock;
+      const esc = Utils.escapeHtml;
 
       return `
         <div class="product-detail">
           <div class="product-image-container">
             ${
               product.image
-                ? `<img src="${product.image}" alt="${product.name}" class="product-image">`
+                ? `<img src="${esc(product.image)}" alt="${esc(
+                    product.name
+                  )}" class="product-image">`
                 : `<div class="product-image-placeholder">
                   <span class="material-icons">restaurant</span>
                 </div>`
             }
           </div>
           <div class="product-info">
-            <h3>${product.name}</h3>
-            <p><strong>価格:</strong> ¥${product.price}</p>
-            <p><strong>説明:</strong> ${product.description || "説明なし"}</p>
-            <p><strong>カテゴリー:</strong> ${product.category}</p>
-            
+            <h3>${esc(product.name)}</h3>
+            <p><strong>価格:</strong> ¥${esc(product.price)}</p>
+            <p><strong>説明:</strong> ${esc(product.description || "説明なし")}</p>
+            <p><strong>カテゴリー:</strong> ${esc(product.category)}</p>
+
             <div class="product-stats">
               <div class="stat-item">
-                <div class="stat-value">${stock.current}</div>
+                <div class="stat-value">${esc(stock.current)}</div>
                 <div class="stat-label">現在の在庫</div>
               </div>
               <div class="stat-item">
-                <div class="stat-value">${stock.limit}</div>
+                <div class="stat-value">${esc(stock.limit)}</div>
                 <div class="stat-label">在庫上限</div>
               </div>
               <div class="stat-item">
-                <div class="stat-value">${product.sales}</div>
+                <div class="stat-value">${esc(product.sales)}</div>
                 <div class="stat-label">販売数</div>
               </div>
               <div class="stat-item">
-                <div class="stat-value">${product.order}</div>
+                <div class="stat-value">${esc(product.order)}</div>
                 <div class="stat-label">表示順序</div>
               </div>
             </div>
@@ -798,6 +826,7 @@
     buildReservationDetailHTML: function (data) {
       const reservation = data.reservation;
       const user = data.user;
+      const esc = Utils.escapeHtml;
 
       const items = [];
       if (reservation.product_0) items.push(reservation.product_0);
@@ -809,33 +838,35 @@
       return `
         <div class="reservation-detail">
           <div class="reservation-header">
-            <h3>予約 #${reservation.id}</h3>
-            <p>${user.grade}年${user.cls}組${user.num}番 ${user.lastname}${
-        user.firstname
-      }</p>
-            <p>予約日時: ${reservation.date} ${reservation.time}</p>
+            <h3>予約 #${esc(reservation.id)}</h3>
+            <p>${esc(user.grade)}年${esc(user.cls)}組${esc(user.num)}番 ${esc(
+        user.lastname
+      )}${esc(user.firstname)}</p>
+            <p>予約日時: ${esc(reservation.date)} ${esc(reservation.time)}</p>
           </div>
-          
+
           <div class="reservation-items">
             ${items
               .map(
                 (item) => `
               <div class="reservation-item">
-                <span>${item.name}</span>
-                <span>¥${item.price}</span>
+                <span>${esc(item.name)}</span>
+                <span>¥${esc(item.price)}</span>
               </div>
             `
               )
               .join("")}
           </div>
-          
+
           <div class="reservation-total">
-            合計: ¥${reservation.total}
+            合計: ¥${esc(reservation.total)}
           </div>
-          
+
           <div class="reservation-status">
-            <span class="status-badge status-${reservation.status.toLowerCase()}">
-              ${reservation.status}
+            <span class="status-badge status-${esc(
+              String(reservation.status).toLowerCase()
+            )}">
+              ${esc(reservation.status)}
             </span>
           </div>
         </div>
@@ -1290,7 +1321,9 @@
         headers: {
           "Content-Type": "application/json",
           "X-Requested-With": "XMLHttpRequest",
+          "X-CSRFToken": Ajax.getCsrfToken(),
         },
+        credentials: "same-origin",
       })
         .then((response) => response.json())
         .then((data) => {

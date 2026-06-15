@@ -9,6 +9,7 @@
 <div class="" style="padding: 5px;">
    <h2>今日の在庫設定</h2>
    <form method="POST" action="/admin/menu/stock/first_setup" enctype="multipart/form-data">
+   <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
    <table class="table">
    <thead>
      <tr style="background-color: var(--md-sys-color-secondary-container); font-size: medium;">

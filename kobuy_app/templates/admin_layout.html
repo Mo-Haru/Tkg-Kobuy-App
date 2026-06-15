@@ -2,6 +2,7 @@
 <html lang="ja">
 <head>
     <meta charset="UTF-8">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-capable" content="yes">
@@ -58,7 +59,7 @@
                                 </div>
                             </md-menu-item>
                             
-                            <md-menu-item href="/logout">
+                            <md-menu-item onclick="document.getElementById('logout-form').submit()">
                                 <div slot="headline">
                                     <span class="material-icons">logout</span>
                                     ログアウト
@@ -66,6 +67,10 @@
                             </md-menu-item>
                         </md-menu>
                     </div>
+                    <!-- CSRF保護のためログアウトはPOSTで送信する -->
+                    <form id="logout-form" action="/logout" method="POST" style="display:none;">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    </form>
                 {% endif %}
             </div>
         </div>

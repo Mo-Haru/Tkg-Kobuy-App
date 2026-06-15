@@ -85,6 +85,18 @@
         element.removeEventListener(event, handler, options);
       }
     },
+
+    // Escape HTML special characters to prevent XSS when injecting
+    // text into the DOM via innerHTML.
+    escapeHtml: function (value) {
+      if (value === null || value === undefined) return "";
+      return String(value)
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#39;");
+    },
   };
 
   // Navigation Management
@@ -370,7 +382,7 @@
 
       alert.innerHTML = `
         <span class="material-icons">${icon}</span>
-        <span class="alert-text">${message}</span>
+        <span class="alert-text">${Utils.escapeHtml(message)}</span>
         ${closeButton}
       `;
 
@@ -512,6 +524,12 @@
       });
     },
 
+    // Read the CSRF token injected by the server into a meta tag
+    getCsrfToken: function () {
+      const meta = document.querySelector('meta[name="csrf-token"]');
+      return meta ? meta.getAttribute("content") : "";
+    },
+
     // Main request function
     request: function (url, options = {}) {
       const defaultOptions = {
@@ -521,6 +539,13 @@
         },
         credentials: "same-origin",
       };
+
+      const method = (options.method || "GET").toUpperCase();
+      // Attach CSRF token for state-changing requests so the server-side
+      // CSRFProtect validation passes.
+      if (!["GET", "HEAD", "OPTIONS", "TRACE"].includes(method)) {
+        defaultOptions.headers["X-CSRFToken"] = this.getCsrfToken();
+      }
 
       const finalOptions = {
         ...defaultOptions,

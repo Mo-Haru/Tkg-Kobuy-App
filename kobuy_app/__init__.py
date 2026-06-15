@@ -11,8 +11,48 @@ from flask import current_app
 csrf = CSRFProtect()
 app = Flask(__name__)
 app.config.from_object('kobuy_app.config')
+# CSRF保護を有効化する。これによりPOST/PUT/PATCH/DELETEはCSRFトークンが必須になる。
+# フォームは {{ form.csrf_token }} を、AJAXは X-CSRFToken ヘッダーを送る必要がある。
+csrf.init_app(app)
 db = SQLAlchemy(app)
 migrate = Migrate(app, db)
+
+
+@app.after_request
+def set_security_headers(response):
+    """すべてのレスポンスに防御的なセキュリティヘッダーを付与する。"""
+    # クリックジャッキング対策
+    response.headers['X-Frame-Options'] = 'DENY'
+    # MIMEタイプ推測によるXSSを防ぐ
+    response.headers['X-Content-Type-Options'] = 'nosniff'
+    # リファラの過剰な送出を抑制
+    response.headers['Referrer-Policy'] = 'strict-origin-when-cross-origin'
+    # 不要なブラウザ機能を無効化
+    response.headers['Permissions-Policy'] = (
+        'geolocation=(), microphone=(), camera=(), payment=()'
+    )
+    # Content-Security-Policy: 既定では同一オリジンのみ許可し、
+    # アプリが利用する外部CDN(フォント/Bootstrap/Material Web)だけを明示的に許可する。
+    # frame-ancestors/object-src/base-url を絞り、クリックジャッキングや
+    # ベースタグ書き換えによる攻撃を防ぐ。
+    response.headers['Content-Security-Policy'] = (
+        "default-src 'self'; "
+        "script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://esm.run; "
+        "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdn.jsdelivr.net; "
+        "font-src 'self' https://fonts.gstatic.com https://fonts.googleapis.com; "
+        "img-src 'self' data:; "
+        "connect-src 'self' https://esm.run; "
+        "frame-ancestors 'none'; "
+        "base-uri 'self'; "
+        "object-src 'none'; "
+        "form-action 'self'"
+    )
+    # HTTPS接続のときのみHSTSを付与する
+    if request.is_secure:
+        response.headers['Strict-Transport-Security'] = (
+            'max-age=31536000; includeSubDomains'
+        )
+    return response
 # インスタンス化
 login_manager = LoginManager()
 # アプリをログイン機能を紐付ける

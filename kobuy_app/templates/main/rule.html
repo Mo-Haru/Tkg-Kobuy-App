@@ -115,6 +115,7 @@
 
         <!-- 同意するボタン -->
             <form method="POST" style="display: inline; ">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                 <md-filled-button class="agree" type="submit">同意する</md-filled-button>
             </form>
         </div>
